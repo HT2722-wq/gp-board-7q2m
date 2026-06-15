@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自选股信息速览表</title>
+<style>
+:root{--up:#e8453c;--down:#15a35a;--flat:#8a8f99;--bg:#eef0f4;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e9ebf1;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:12px 14px 8px;}
+.h-title{font-size:17px;font-weight:700;}.h-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+.toolbar{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.search{flex:1;border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:14px;outline:none;}
+select{border:1px solid var(--line);border-radius:20px;padding:7px 8px;font-size:13px;background:#fff;}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:9px 14px 4px;scrollbar-width:none;}.chips::-webkit-scrollbar{display:none;}
+.chip{flex:none;border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:16px;padding:5px 12px;font-size:13px;white-space:nowrap;cursor:pointer;}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.legend{font-size:11px;color:var(--sub);padding:6px 14px 0;line-height:1.6;}
+main{padding:10px 12px 40px;display:grid;grid-template-columns:1fr;gap:13px;}
+@media(min-width:880px){main{grid-template-columns:1fr 1fr;}}
+.card{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(20,30,60,.05);}
+.strip{height:5px;}.card.up .strip{background:var(--up);}.card.down .strip{background:var(--down);}.card.flat .strip{background:var(--flat);}
+.body{padding:14px 15px 15px;}
+.row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.name{font-size:17px;font-weight:700;}.code{font-size:12px;color:var(--sub);margin-left:6px;}
+.tag{font-size:11px;color:#fff;background:#8a93a6;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+.tag.kc{background:#7b61ff;}.tag.cy{background:#2f9e6b;}
+.pct{font-size:22px;font-weight:800;text-align:right;line-height:1;}.pct small{font-size:12px;font-weight:600;display:block;color:var(--sub);margin-top:3px;}
+.up .pct{color:var(--up);}.down .pct{color:var(--down);}.flat .pct{color:var(--flat);}
+.meta{display:flex;gap:16px;margin:9px 2px 0;font-size:12px;color:var(--sub);flex-wrap:wrap;}.meta b{color:var(--ink);font-weight:600;}
+.strong{color:var(--up);font-weight:700;}.weak{color:var(--down);font-weight:700;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;}
+.badge{font-size:11px;border-radius:6px;padding:2px 7px;}
+.badge.risk{background:#fde7ee;color:var(--up);}.badge.lhb{background:#fff3e0;color:#c47a14;}
+.badge.notice{background:#e8f0ff;color:#2f6df0;}.badge.report{background:#e7f7ef;color:#159a57;}
+.sec{margin-top:14px;}.sh{font-size:13px;font-weight:700;margin-bottom:6px;}
+.kv{font-size:12.5px;line-height:1.65;color:#3a4150;margin:3px 0;}.kv b{color:var(--ink);}
+.pos{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
+.pill{font-size:11px;border-radius:6px;padding:2px 8px;background:#f1f3f7;color:#4b5563;}
+.pill.cn{background:#fff3e0;color:#c47a14;}.pill.gl{background:#e8f0ff;color:#2f6df0;}.pill.bench{background:#f0eaff;color:#7b4fe0;}
+.verdict{margin-top:8px;font-size:12.5px;line-height:1.65;color:#3a2f1d;background:#fff8e6;border:1px solid #ffe6a8;border-radius:9px;padding:9px 11px;}.verdict b{color:#b8860b;}
+.chain,.flow{margin:7px 0;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.62;}
+.chain{background:#eef6ff;border:1px solid #d6e6fb;}.chain>b{color:#2f6df0;display:block;margin-bottom:3px;}
+.flow{background:#f7f1ff;border:1px solid #e6dafb;}.flow>b{color:#7b4fe0;display:block;margin-bottom:3px;}
+.chain .pre,.flow .pre,.who .pre{white-space:pre-wrap;color:#3a4150;}
+.who{margin:7px 0;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.62;background:#f1faf4;border:1px solid #cdeedd;}.who>b{color:#159a57;display:block;margin-bottom:3px;}
+.flow.big,.who.big{font-size:16px;line-height:2.0;padding:13px 15px;}.flow.big>b,.who.big>b{font-size:16.5px;margin-bottom:7px;}
+.makes.big{font-size:16px;line-height:1.85;padding:12px 14px;}
+.vdiag{margin:8px 0;}.vdiag svg{width:100%;height:auto;display:block;border:1px solid #e7edf6;border-radius:11px;}
+.boardlink{margin:7px 0;background:#eef6ff;border:1px solid #cfe0fb;border-radius:9px;padding:9px 11px;font-size:12.5px;font-weight:600;color:#2f6df0;cursor:pointer;line-height:1.5;}
+.boardlink:active{background:#dfecff;}
+.flowtip{font-size:11.5px;color:#7b8497;background:#f4f7fc;border-radius:8px;padding:7px 9px;margin-bottom:8px;line-height:1.55;}
+.makes{margin:6px 0;background:#fff7e6;border:1px solid #ffe0a3;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.6;color:#7a5300;}.makes b{color:#b8770b;}
+.peers{margin:7px 0;background:#eef4ff;border:1px solid #d6e4fb;border-radius:9px;padding:7px 11px;font-size:12px;line-height:1.6;color:#2f4a73;}.peers .peerhint{color:#9aa9c2;font-size:10.5px;margin-left:4px;}
+.terms2{margin-top:9px;background:#f6f4ff;border-radius:9px;padding:6px 11px;}
+.terms2>summary{color:#5b3fd0;font-weight:600;font-size:12px;cursor:pointer;list-style:none;}
+.terms2>summary::-webkit-details-marker{display:none;}
+.terms2>summary::before{content:'▸ ';}.terms2[open]>summary::before{content:'▾ ';}
+.terms2 .ti2{font-size:12px;color:#3a4150;line-height:1.6;margin:5px 0;}.terms2 .ti2 b{color:#5b3fd0;}
+.hot{background:#fff8f3;border:1px solid #ffe6d2;border-radius:9px;padding:10px 11px;font-size:12.5px;line-height:1.65;color:#5a4636;}
+.hot .lab{font-weight:700;color:#c4581a;}.hot a{color:#2f6df0;text-decoration:none;}.hot .ev{display:block;margin:2px 0;}.hot .nodrv{color:var(--sub);}
+.synth{font-size:12.5px;line-height:1.7;color:#3a4150;background:#f7f8fa;border-radius:9px;padding:10px 11px;}.synth i{color:#2f6df0;font-style:normal;font-weight:600;}
+.scan{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.si{font-size:11px;border-radius:6px;padding:2px 7px;background:#f1f3f7;color:#566;}
+.si b{margin-left:3px;}.si.high b{color:#2f6df0;}.si.mid b{color:#8a929c;}.si.low b{color:#e07c16;}.si.na b{color:#b8bdc4;}
+.pin{font-size:12.5px;font-weight:600;border-radius:8px;padding:7px 10px;margin:9px 0 2px;line-height:1.5;}
+.pin.risk{background:#fde7ee;color:#d23f6a;}.pin.news{background:#e8f1ff;color:#2f6df0;}
+.pin .pinhint{font-weight:400;font-size:11px;color:#8a929c;margin-left:7px;}
+.pli{font-size:12.5px;line-height:1.7;color:#3a4150;margin:3px 0 3px 2px;}
+.plintro{font-size:12px;color:#8a929c;margin:3px 0;}
+.rep.proc{background:#fafafa;border-left-color:#c9ced6;}
+.tl{position:relative;padding-left:18px;margin-top:6px;}
+.tl:before{content:"";position:absolute;left:4px;top:5px;bottom:5px;width:2px;background:var(--line);}
+.tli{position:relative;margin-bottom:13px;}.tli:last-child{margin-bottom:2px;}
+.tldot{position:absolute;left:-18px;top:3px;width:11px;height:11px;border-radius:50%;border:2px solid var(--bg);box-sizing:border-box;}
+.tld{font-size:12.5px;font-weight:600;}.tlrest{font-weight:400;color:#8a929c;}
+.tlt{font-size:12.5px;color:#3a4150;margin-top:1px;line-height:1.55;}
+.geo{display:flex;align-items:center;gap:9px;padding:7px 2px;border-top:1px solid var(--line);font-size:12.5px;}
+.geo:first-of-type{border-top:none;}
+.gem{font-weight:600;color:#566;min-width:38px;}
+.gedot{width:9px;height:9px;border-radius:50%;flex:none;}
+.gen{font-weight:600;}.get{color:#3a4150;}
+.gempty{font-size:12px;color:#8a929c;line-height:1.6;padding:4px 2px;}
+.rep{border:1px solid #e6e2f5;border-left:4px solid #b9a6ef;border-radius:9px;padding:9px 11px;margin:11px 0;background:#fcfbff;font-size:12.5px;line-height:1.6;}
+.glossary{margin-top:12px;background:#f6f4ff;border-radius:9px;padding:5px 11px 8px;}.glossary>summary{color:#5b3fd0;font-weight:600;}
+.rep .rt{font-weight:700;color:var(--ink);}
+.rep .stale{color:#c4581a;font-size:10px;font-weight:600;background:#fff3e6;border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.rep .concl{color:#222;margin:3px 0;background:#fbfbe9;border-radius:6px;padding:5px 8px;}
+.rep .bki{color:#4a5160;margin:4px 0 4px 2px;line-height:1.55;}.rep .bki b{color:var(--ink);}
+.rep .more{margin:5px 0 3px;}
+.rep .more summary{font-size:11.5px;color:#7b4fe0;cursor:pointer;list-style:none;}
+.rep .more summary::-webkit-details-marker{display:none;}
+.rep .more summary::before{content:'▸ ';}
+.rep .more[open] summary{margin-bottom:3px;}.rep .more[open] summary::before{content:'▾ ';}
+.rep .kd{margin-top:6px;font-size:11.5px;color:#2c3e50;background:#eef6ff;border-radius:6px;padding:6px 8px;line-height:1.5;}
+.rep .lite{color:#555;margin:3px 0;}.rep .lite .note{color:#aab0b8;font-size:11px;}
+.rep a{font-size:11.5px;color:#2f6df0;text-decoration:none;display:inline-block;margin-top:4px;}
+.pic{margin-top:13px;font-size:13px;color:#2c3340;background:#eef1f6;border-radius:9px;padding:9px 11px;line-height:1.6;}.pic b{color:var(--ink);}
+.disc{font-size:11px;color:#9aa0a8;text-align:center;padding:6px 20px 30px;line-height:1.6;}
+.empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:40px 0;}
+.rep .klab{font-size:11.5px;font-weight:700;color:#2c3e50;margin:7px 0 4px;}
+.kdt{width:100%;border-collapse:collapse;font-size:11.5px;background:#f4f9ff;border-radius:6px;overflow:hidden;}
+.kdt td{padding:5px 8px;border-bottom:1px solid #e3eefb;vertical-align:top;}.kdt tr:last-child td{border-bottom:none;}
+.kdt .kdk{color:#5a6573;width:42%;}.kdt .kdv{color:#1d2330;font-weight:600;}
+.kdt .up{color:var(--up);}.kdt .dn{color:var(--down);}
+.rep .terms{margin-top:8px;background:#f6f4ff;border-radius:8px;padding:7px 9px;}
+.rep .ti{font-size:11.5px;color:#3a4150;line-height:1.6;margin:4px 0;}.rep .ti b{color:#5b3fd0;}.rep .tsrc{font-size:10px;color:#aab0b8;margin-left:3px;}
+.zoom{font-size:11px;color:#2f6df0;background:#eef4ff;border:none;border-radius:12px;padding:3px 10px;cursor:pointer;margin-top:7px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(20,25,40,.55);z-index:50;overflow:auto;padding:0;}
+.modal-card{max-width:780px;margin:0 auto;background:var(--bg);border-radius:0;position:relative;padding:12px 12px 44px;min-height:100%;box-sizing:border-box;}
+.mclose{position:fixed;top:12px;right:12px;width:40px;height:40px;padding:0;border-radius:50%;background:rgba(20,25,40,.62);color:#fff;border:none;font-size:20px;line-height:40px;text-align:center;cursor:pointer;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+.zoomwrap{font-size:15px;padding:2px;}.zoomwrap .zoom{display:none;}.zoomwrap .card{box-shadow:none;}
+.zoomwrap .name{font-size:23px;}.zoomwrap .pct{font-size:28px;}.zoomwrap .sh{font-size:16px;}
+.zoomwrap .kv,.zoomwrap .synth,.zoomwrap .hot,.zoomwrap .verdict,.zoomwrap .pic,.zoomwrap .bki,.zoomwrap .concl,.zoomwrap .lite,.zoomwrap .ti,.zoomwrap .kdt,.zoomwrap .ev{font-size:15px;line-height:1.85;}
+.zoomwrap .pill,.zoomwrap .badge,.zoomwrap .si,.zoomwrap .klab,.zoomwrap .tsrc{font-size:13px;}
+.tabs{display:flex;background:#eef0f4;border-radius:11px;padding:3px;margin:10px 0 2px;}
+.tab{flex:1;text-align:center;padding:8px 0;font-size:14px;font-weight:600;color:var(--sub);border-radius:9px;cursor:pointer;}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,30,60,.12);}
+.tabhint{font-size:11px;color:var(--sub);padding:7px 2px 0;}
+.pre{background:#fff8ee;border:1px solid #ffe6c2;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:#5a4a32;margin-top:8px;}
+.pre .it{margin:4px 0;}.pre b{color:#7a5a1a;}
+.pre a,.ent a{color:#2f6df0;text-decoration:none;}
+#prebanner{padding:0 12px;}
+.gbanner{background:linear-gradient(180deg,#fff6ec,#fffdfa);border:1px solid #ffe0bd;border-radius:12px;padding:11px 13px;margin-bottom:4px;}
+.gh{font-size:13px;font-weight:700;color:#b8600f;}.gby{font-size:10px;color:#b9a06a;font-weight:400;margin-left:7px;}
+.gchips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0;}
+.gchip{font-size:12px;border-radius:7px;padding:3px 9px;background:#f1f3f7;color:#566;font-weight:600;}
+.gchip.up{background:#fdeceb;color:var(--up);}.gchip.down{background:#e9f6ef;color:var(--down);}
+.gsum{font-size:12.5px;color:#5a4a32;line-height:1.6;}
+.prenote{font-size:11px;color:#9097a0;line-height:1.6;padding:4px 4px 2px;}.prenote b{color:#6b7280;}
+.pre .warn{color:#9a7b3a;font-size:11px;margin-top:5px;border-top:1px dashed #ecd9b5;padding-top:5px;}
+.empty2{color:var(--sub);font-size:12.5px;padding:16px 8px;text-align:center;background:#f7f8fa;border-radius:9px;margin-top:8px;line-height:1.7;}
+.pblk{font-size:12.5px;line-height:1.65;color:#3a4150;margin:8px 0;}.pblk .lab{font-weight:700;color:#b8600f;}
+.pblk.core{background:#fff8ee;border:1px solid #ffe6c2;border-radius:9px;padding:9px 11px;}.pblk.core b{color:#7a5a1a;}
+.tl{position:relative;margin-top:8px;padding-left:14px;}
+.tl:before{content:'';position:absolute;left:3px;top:4px;bottom:4px;width:2px;background:#e3e6ee;}
+.ent{position:relative;margin-bottom:13px;}
+.ent:before{content:'';position:absolute;left:-14px;top:3px;width:9px;height:9px;border-radius:50%;background:#2f6df0;border:2px solid #fff;}
+.ent.today:before{background:var(--up);}
+.ent .date{font-size:12.5px;font-weight:700;color:var(--ink);}
+.ent .date .new{font-size:10px;color:#fff;background:var(--up);border-radius:8px;padding:1px 6px;margin-left:6px;}
+.ent .li{font-size:12px;line-height:1.6;color:#3a4150;margin:3px 0;}
+.ent .li .k{display:inline-block;min-width:54px;color:var(--sub);vertical-align:top;}
+.ent .up{color:var(--up);font-weight:600;}.ent .down{color:var(--down);font-weight:600;}
+.pdtl{display:block;margin:4px 0 4px 12px;}
+.pdtl>summary{cursor:pointer;list-style:none;color:#2c3550;line-height:1.55;}
+.pdtl>summary::-webkit-details-marker{display:none;}
+.pdtl>summary::before{content:'▸ ';color:#2f6df0;font-weight:700;}
+.pdtl[open]>summary::before{content:'▾ ';}
+.pdtl .pdbody{margin:5px 0 2px 12px;padding:7px 9px;background:#f7f9fc;border-radius:7px;border-left:3px solid #cfe0fb;}
+.pdtl .pbki{color:#4a5160;margin:4px 0;line-height:1.55;}.pdtl .pbki b{color:var(--ink);}
+.pdtl .pdbody a{color:#2f6df0;text-decoration:none;display:inline-block;margin-top:4px;font-size:11.5px;}
+.ent .pfin{font-size:11.5px;color:#159a57;background:#eafaf1;border-radius:6px;padding:4px 8px;margin:4px 0 4px 12px;}
+</style></head><body>
+<header>
+  <div class="h-title">📊 自选股信息速览表</div>
+  <div class="h-sub">预览·光通信v9 · 共 <span id="cnt">6</span> 只 · 实时异动走飞书消息</div>
+  <div class="tabs" id="tabs"><div class="tab on" data-t="yanjiu">🔬 研究</div><div class="tab" data-t="pre">🌅 盘前</div><div class="tab" data-t="post">🌆 盘后</div></div>
+  <div class="tabhint" id="tabhint">研究=这只股票的深度档案(公司速览/综合分析/研报精读),慢变、不被每日流水冲掉。</div>
+  <div class="toolbar">
+    <input class="search" id="q" placeholder="搜名称或代码…">
+    <select id="sort"><option value="pct">按今日涨跌</option><option value="risk">风险优先</option></select>
+  </div>
+</header>
+<div class="chips" id="chips">
+  <div class="chip on" data-f="all">全部</div>
+  <div class="chip" data-f="up">🔴 上涨</div><div class="chip" data-f="down">🟢 下跌</div>
+  <div class="chip" data-f="news">📢 有动静</div><div class="chip" data-f="risk">⚠️ 有风险</div>
+</div>
+<div class="legend">📌 这是你自选股的【公开信息 · 人话速览】——把研报 / 公告 / 公司背景收拢成一页,说人话、不编。<b>只做信息整理,不荐股、不预测涨跌,买卖你自己判断。</b>卡片上沿 红涨绿跌;「近期关注点」找不到就写"未找到明确驱动"。</div>
+<div id="prebanner"></div>
+<main id="grid"></main>
+<div class="disc">⚠️ 仅供研究参考,不构成任何买卖建议,投资决策请自行判断。数据来自公开行情/研报。</div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeZoom()"><div class="modal-card"><button class="mclose" onclick="closeZoom()" aria-label="关闭">✕</button><div class="zoomwrap" id="zoomwrap"></div></div></div>
+<script>
+const DIM=["基本面","资金","估值","成长","技术","催化","情绪","风险"];
+// 每个维度的 高/中/低 翻译成本维度的人话(蓝=对它有利,橙=不利,灰=一般)。
+// 大脑评级口径:高=对它越有利(估值"高"=便宜、风险"高"=风险小),这里统一翻成不用反着想的词。
+const DIMWORD=[
+ {"高":"扎实","中":"一般","低":"偏弱"},   // 基本面
+ {"高":"流入","中":"中性","低":"流出"},   // 资金
+ {"高":"偏便宜","中":"合理","低":"偏贵"}, // 估值
+ {"高":"较快","中":"平稳","低":"放缓"},   // 成长
+ {"高":"偏强","中":"震荡","低":"偏弱"},   // 技术
+ {"高":"较多","中":"一般","低":"偏少"},   // 催化
+ {"高":"偏乐观","中":"中性","低":"偏谨慎"},// 情绪
+ {"高":"较低","中":"一般","低":"较高"}    // 风险(高=风险小→偏蓝,低=风险大→偏橙)
+];
+const dimWord=(i,v)=>(DIMWORD[i]&&DIMWORD[i][v])||v;
+const STOCKS=[{"name": "中际旭创", "code": "300308", "pct": -1.5, "price": 1245, "mktTxt": "创业板", "profile": {"biz": "中际旭创是做'光模块'的,而且是全球出货量最大的那家。光模块是个啥?——AI数据中心里成千上万张英伟达GPU芯片要协同算一道题,就得在彼此间疯狂来回传海量数据;距离一远、用铜线传又慢又发热,就改用'光'来传。光模块就是插在交换机/服务器接口上、负责把电信号转成激光打进光纤、对面再转回电信号的那个收发器件。它做的是整只成品模块,从800G到最新1.6T都全球领跑。", "chain": "在'AI光互联'这条链上,它在【中游·模块封装】,是做成品光模块的全球龙头(还往上游器件做了垂直整合、自己也能做一部分)。\n· 上游:光芯片、电芯片(DSP)——模块的'心脏'。\n· 中游(它在这):把芯片封装成800G/1.6T成品光模块,全球出货第一。\n· 下游:英伟达生态、谷歌/微软等云大厂,买去搭AI集群。", "makes": "⑤ 光模块(中游·把上游零件封装成收发器;800G 全球领先)", "prod": "①光模块(把电↔光来回翻译的收发模块,插在交换机/服务器上让数据在光纤里高速跑),主力已到800G、正放量下一代1.6T;②自研部分上游光器件(垂直整合、压成本)。", "moat": "全球出货量第一,800G/1.6T高端领先,深度绑定英伟达、谷歌等大客户,从器件到模块垂直整合、成本和交付能力强。", "posCN": "国内光模块绝对龙头、第一", "posGlobal": "★全球数一数二(与美国Coherent并列全球第一)", "bench": "看竞争格局用、不是拿来解释它:国内——新易盛、天孚通信(都在你关注列表里,新易盛是最直接的同行);国外——美国Coherent、Marvell", "verdict": "★这是AI算力链里中国企业全球领先的少数核心环节,含金量最高的一只。AI算力爆发→GPU集群越堆越大→光模块需求指数级增长,它是直接、核心受益者,且全球领跑(不是国产替代追赶者)。不属于'被卡脖子',反而是中国在AI硬件链的优势环节。要留意行业高景气的周期性与大客户集中。", "terms": [["GPU", "专门算AI的高性能计算卡,英伟达最有名,AI越火越缺它。"], ["服务器 / 服务器接口", "服务器=躺在机柜里24小时干活的超强电脑(里头插满GPU);接口=机箱上插东西的口,光模块就插这上面。"], ["光模块", "GPU之间的'光对讲机',把芯片的电信号翻译成光传过去、再翻译回电。"], ["光纤", "比头发还细的玻璃丝,光在里面跑、又远又快(你家'光纤入户'宽带就是它)。"], ["交换机", "网络里的'总机/中转站',把成百上千台服务器连起来、决定每份数据送去哪台。"], ["光芯片 / 电芯片(DSP)", "光模块的两颗心脏:光芯片管发光收光,电芯片(DSP)管把信号整理干净。"], ["800G / 1.6T", "光模块的速度等级,数字越大传得越快;1.6T是下一代,先上量先吃红利。"], ["垂直整合", "从上游零件到成品自己都能做一部分,好处是成本可控、不被卡。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "光模块", "peers": ["新易盛", "天孚通信", "光库科技", "仕佳光子", "联特科技"], "peer_board": "光模块/光器件"}}, {"name": "新易盛", "code": "300502", "pct": 5.57, "price": 540.49, "mktTxt": "创业板", "profile": {"biz": "新易盛是做'光模块'的。光模块是个啥?——AI数据中心里有成千上万张英伟达GPU芯片,它们要一起算一道题,就得在彼此间疯狂来回传数据;距离一远、数据量一大,用铜线传又慢又发热,就改用'光'来传。光模块就是装在交换机/服务器接口上、负责把电信号转成激光打进光纤、对面再转回电信号的那个收发器件。新易盛是国内做这个器件的头部厂商,客户大多在海外(北美云大厂)。", "chain": "在'AI光互联'这条链上,它在【中游·模块封装】。\n· 上游:光芯片、电芯片(DSP)——模块的'心脏',国内不少还靠进口。\n· 中游(它在这):把上游的光、电芯片封装成完整光模块,拼的是工艺、良率、成本。\n· 下游:交换机/服务器厂商 + 亚马逊/谷歌这些云数据中心,买去搭AI集群。", "makes": "⑤ 光模块(中游·成品收发器,800G/1.6T)", "prod": "①800G/1.6T光模块(数字越大传得越快,1.6T是下一代,先上量先吃红利,是收入主力);②硅光/相干方案(更远距离、更省电的新技术路线,卡未来)。", "moat": "国内光模块第一梯队,成本和良率行业领先;深绑北美云大厂,海外认证门槛高、客户用上就很难换供应商——这是护城河。", "posCN": "国内光模块龙头之一,出货量常年前三(你关注的中际旭创国内出货第一、新易盛紧随其后,天孚通信也在这条链上,三家算国内第一梯队)", "posGlobal": "★全球高端光模块主力供应商之一(北美AI资本开支的重要外供)", "bench": "看竞争格局用、不是拿来解释它:国内——中际旭创、天孚通信(都在你关注列表里);国外——美国Coherent、Marvell", "verdict": "★AI算力链里最直接受益、弹性最大的环节之一,它是直接卖'铲子'的。海外占比高→行情好时往往涨得比同行更猛;但'重押海外、依赖少数大客户'是软肋,一旦北美砍单或大客户转单,回撤也更狠——两面一起看。", "terms": [["服务器", "一台超强的电脑,没显示器、躺在机房机柜里24小时干活,专门对外提供计算/存储。AI数据中心就是一柜柜服务器,里头插满GPU。"], ["服务器接口", "服务器机箱上插东西的插口,就像你电脑上的USB口、网线口。光模块就插在这种口上。"], ["交换机", "网络里的'总机/交通枢纽',把成百上千台服务器连起来、决定每份数据该送去哪台机器。好比大型电话总机,负责把谁的电话转接给谁。"], ["光模块", "GPU之间的'光对讲机',把芯片的电信号翻译成光传过去、再翻译回电。"], ["光纤", "比头发还细的玻璃丝,光在里面跑、传得又远又快。你家'光纤入户'宽带就是它。"], ["收发器件", "又能发、又能收信号的小零件,像对讲机。"], ["封装", "把裸芯片和小零件组装好、加外壳做成能直接用的成品。好比把散茶叶装成茶包,拿来就泡。"], ["光芯片 / 电芯片(DSP)", "光模块的两颗心脏:光芯片管发光收光,电芯片(DSP)管把信号整理干净。"], ["良率", "做100个里有几个合格。越高越赚钱(废品少)。"], ["GPU", "专门算AI的高性能计算卡,英伟达最有名,AI越火越缺它。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "光模块", "peers": ["中际旭创", "天孚通信", "光库科技", "仕佳光子", "联特科技"], "peer_board": "光模块/光器件"}}, {"name": "天孚通信", "code": "300394", "pct": 6.93, "price": 305.04, "mktTxt": "创业板", "profile": {"biz": "天孚通信做的是'光器件'——不是整只光模块,而是光模块里里外外那些精密光学小零件(透镜、隔离器、陶瓷套管、光引擎等)。打个比方:光模块是一道菜,天孚卖的是做这道菜的关键食材和厨具,供给做整只模块的厂(像中际旭创、新易盛)。AI光模块卖得越多,它的零件就用得越多。", "chain": "在'AI光互联'链上,它在【中游偏上游·光器件配套】,比做成品模块的厂更靠上一环。\n· 上游:光芯片(激光器/探测器)。\n· 它在这:做透镜、隔离器、陶瓷套管、光引擎等光器件。\n· 下游:光模块厂(中际旭创/新易盛等)→ 再往下才是云大厂。", "makes": "③ 光器件(上游·把光对准耦合的无源零件:FAU/透镜/隔离器/光引擎)", "prod": "光通信无源+有源光器件:陶瓷套管、适配器、隔离器、透镜、光收发接口、光引擎等(光模块内部和接口处的精密光学零件),给光模块厂'配套供货'。", "moat": "光器件品类全、工艺精,与头部光模块厂深度绑定;AI光模块放量里确定性较高的'卖配套'角色。", "posCN": "光器件领域国内领先平台", "posGlobal": "光器件细分有竞争力,整体规模小于海外综合光器件巨头", "bench": "看竞争格局用:它的客户中际旭创、新易盛都在你关注列表里(它是它们的供应商、不是竞争对手);海外对标部分综合光器件厂", "verdict": "与中际旭创、新易盛同属中国AI光通信优势链,但它在'上游配套器件'——模块厂放量它跟着放量,是确定性较高的'卖铲子的人手里的铲子'。不被卡脖子;增长确定性好,但弹性和地位略次于整机龙头。", "terms": [["光器件", "光模块里负责处理光的精密小零件(让光对准、隔离、耦合进光纤等),是模块的'内脏'。"], ["光模块", "GPU之间的'光对讲机',把电信号翻译成光传过去、再翻译回电;天孚做的是它里面的零件。"], ["透镜 / 隔离器 / 陶瓷套管", "都是光器件:透镜聚光、隔离器防止光倒灌、陶瓷套管把光纤对准固定。"], ["光引擎", "把若干光器件预先组装成的一个小模组,光模块厂拿去直接用、更省事。"], ["无源 / 有源器件", "无源=不用通电(透镜、套管);有源=要通电工作(含激光器的)。"], ["GPU", "专门算AI的高性能计算卡,英伟达最有名;它们互联要用到大量光模块、进而用到天孚的器件。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "光器件", "peers": ["中际旭创", "新易盛", "光库科技", "仕佳光子", "联特科技"], "peer_board": "光模块/光器件"}}, {"name": "光库科技", "code": "300620", "pct": 20.0, "price": 343.05, "mktTxt": "创业板", "profile": {"biz": "光库科技做的是光模块上游的光器件,两块重点:①薄膜铌酸锂调制器——给激光'装上信息'的关键芯片(光芯片发的激光像一辆空车,调制器按数据0和1飞快往车上装货);②FAU/PIC/CPO 光纤阵列等配套器件。它已明确面向 AI 计算集群、数据中心内部高速互联,AI 相关性在增强。", "chain": "在'AI光互联'链上,它在【上游·光器件/调制芯片】,比做成品光模块的厂更靠前。\n· 它在这:做铌酸锂调制器等高端光器件。\n· 下游:光模块厂(把调制器装进模块)→ 再往下云大厂。\n· 越高速(800G/1.6T)、越长距离相干传输,越依赖它这种高端调制器。", "makes": "③④ 光器件+调制器(上游·FAU/PIC/CPO 配套 + 薄膜铌酸锂调制器)", "prod": "①铌酸锂/薄膜铌酸锂电光调制器(给激光装数据的高速芯片,相干光通信和高速光模块的关键);②光纤激光器用光器件(隔离器等)。", "moat": "在铌酸锂调制器这个高端细分有技术积累,卡位光通信高速化的上游关键器件。", "posCN": "国内铌酸锂调制器/高端光器件代表厂商之一", "posGlobal": "高端调制器此前以海外为主,它在国产替代、份额上升中", "bench": "看竞争格局用:下游客户是光模块厂(中际旭创/新易盛等,在你关注列表里);海外对标高端铌酸锂器件厂", "verdict": "它卡在光模块上游的高端器件(薄膜铌酸锂调制器 + FAU/PIC/CPO 配套),且在国产替代;并已切入 AI 数据中心高速互联(200/400/800G),AI 相关性在增强。题材和成长性都有,但体量比整机龙头小、放量节奏是变量,弹性大、确定性略低。", "terms": [["铌酸锂调制器", "一种'给激光装信息'的光芯片:激光本身不带数据,它按电信号飞快地把0和1调制到激光上。薄膜铌酸锂是更先进的版本。"], ["相干光通信", "一种更高级的光传输方式,能传更远、容量更大,对调制器要求更高。"], ["光器件", "光模块里处理光的精密小零件(对准、隔离、调制等)。"], ["光模块", "GPU之间的'光对讲机',把电信号翻译成光、再翻译回电;光库做的是它上游的调制芯片。"], ["GPU", "专门算AI的高性能计算卡,英伟达最有名;它们互联推动高速光模块、进而拉动高端调制器需求。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "调制器/光器件", "peers": ["中际旭创", "新易盛", "天孚通信", "仕佳光子", "联特科技"], "peer_board": "光模块/光器件"}}, {"name": "仕佳光子", "code": "688313", "pct": 10.44, "price": 166.53, "mktTxt": "创业板", "profile": {"biz": "仕佳光子做的是'光芯片'和光器件,处在光通信很上游的'芯片'环节。它最有名的是PLC分路器芯片(能把一路光信号公平地分成很多路,是光纤入户宽带的关键);在AI方向,它做光模块要用的光芯片和器件。", "chain": "在光通信链上,它在【上游·光芯片/无源器件】。\n· 它在这:做PLC分路器芯片、AWG等光芯片和器件。\n· 下游:光模块厂、宽带网络设备商。\n· 越往上游芯片走,技术门槛越高、国产化越有意义。", "makes": "① 光芯片(上游·激光器/AWG;招牌 PLC 分路器偏接入网、非 AI)", "prod": "①PLC光分路器芯片(把一路光分成多路,光纤入户FTTH的核心,全球份额领先);②AWG等光芯片(用于光模块的波分复用);③室内光缆。", "moat": "PLC分路器芯片全球市占率领先,光芯片有自研能力,卡位光通信上游。", "posCN": "PLC分路器芯片国内龙头、全球领先;光芯片国产代表之一", "posGlobal": "★PLC分路器芯片全球数一数二", "bench": "看竞争格局用:下游是光模块厂(中际旭创等在你关注列表);分路器芯片它本就是全球龙头、海外同行少", "verdict": "它在 PLC 分路器芯片(接入网/光纤到户用,跟 AI 数据中心是两回事)上是国产代表、基本盘稳;真正沾 AI 的是 DFB 激光器芯片、数据中心 AWG 那部分,占比有限、弹性要谨慎看。是光通信上游芯片标的,但别把它当 800G/1.6T AI 光模块核心芯片龙头。", "terms": [["光芯片", "光通信里负责'产生光、处理光'的芯片,在光模块的最上游、技术门槛高。"], ["PLC分路器", "一块能把一路光'一分多'(如1分64)、几乎不损耗的芯片;运营商一根光纤分给上百户人家就靠它。"], ["AWG / 波分复用", "把多路不同颜色的光合到一根光纤里传、再分开,等于一根光纤当很多根用。"], ["FTTH 光纤入户", "把光纤直接接到你家的宽带方式,'光纤入户'就是它。"], ["光模块", "GPU之间的'光对讲机';仕佳做的是它上游的光芯片。"], ["GPU", "专门算AI的高性能计算卡,英伟达最有名,AI越火越缺它。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "光芯片", "peers": ["中际旭创", "新易盛", "天孚通信", "光库科技", "联特科技"], "peer_board": "光模块/光器件"}}, {"name": "联特科技", "code": "301205", "pct": 6.47, "price": 323.07, "mktTxt": "创业板", "profile": {"biz": "联特科技也是做'光模块'的,和中际旭创、新易盛同一类产品,只是规模小一些。它电信光模块和数据中心光模块都做,海外客户占比高。", "chain": "在'AI光互联'链的【中游·模块封装】,和中际旭创/新易盛同一环,只是体量小。\n· 上游:光芯片、电芯片(DSP)。\n· 它在这:封装成光模块(电信用 + 数据中心用)。\n· 下游:海外电信运营商、数据中心客户。", "makes": "⑤ 光模块(中游·成品收发器,规模小于中际旭创/新易盛)", "prod": "①数据中心光模块(400G/800G,AI方向,放量看点);②电信光模块(接入网/传输网,传统基本盘)。", "moat": "电信光模块有积累、海外渠道广;数据中心高端在追赶头部。", "posCN": "国内光模块厂之一,规模/客户/份额弱于中际旭创、新易盛", "posGlobal": "海外电信光模块有份额,数据中心高端份额较小", "bench": "看竞争格局用:中际旭创、新易盛、天孚(都在你关注列表里,是同链更头部的厂)", "verdict": "和中际旭创、新易盛同赛道,逻辑一致(AI→光模块需求涨),但它体量小、数据中心高端占比低,更多是'跟随 + 电信基本盘 + 海外'。弹性看它数据中心800G能不能放量,确定性和地位低于头部双雄。", "terms": [["光模块", "GPU/设备之间的'光对讲机',把电信号翻译成光传过去、再翻译回电。"], ["数据中心光模块 / 电信光模块", "前者用在AI数据中心服务器互联(联特的AI弹性);后者用在运营商的宽带网络(联特的传统基本盘)。"], ["光纤", "比头发还细的玻璃丝,光在里面跑、又远又快。"], ["光芯片 / 电芯片(DSP)", "光模块的两颗心脏:光芯片管发光收光,电芯片(DSP)管整理信号。"], ["GPU", "专门算AI的高性能计算卡,英伟达最有名,AI越火越缺它。"]], "scene": "光通信", "scene_name": "光通信产业链(上游→中游→系统端)", "role": "光模块", "peers": ["中际旭创", "新易盛", "天孚通信", "光库科技", "仕佳光子"], "peer_board": "光模块/光器件"}}];
+const BOARDS={"光通信": {"name": "光通信产业链(上游→中游→系统端)", "svg": "<svg viewBox=\"0 0 360 452\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" font-family=\"-apple-system,'PingFang SC','Microsoft YaHei',sans-serif\">\n<title>光通信实物剖面图</title><desc>第一步拆开光模块看里面:②电芯片→①激光器→④调制器→③光器件→光射出。第二步光模块插进系统:服务器GPU↔光模块⑤↔光纤⑥↔光模块⑤↔交换机(交换ASIC⑦)。</desc>\n<defs><marker id=\"aro\" markerWidth=\"8\" markerHeight=\"8\" refX=\"5\" refY=\"3\" orient=\"auto\"><path d=\"M0,0 L5,3 L0,6 Z\" fill=\"#94a3b8\"/></marker>\n<marker id=\"arl\" markerWidth=\"8\" markerHeight=\"8\" refX=\"5\" refY=\"3\" orient=\"auto\"><path d=\"M0,0 L5,3 L0,6 Z\" fill=\"#f0a500\"/></marker></defs>\n<rect x=\"0\" y=\"0\" width=\"360\" height=\"452\" rx=\"14\" fill=\"#fbfcfe\"/>\n\n<!-- ===== 第一步:拆开一只光模块看里面(①②③④在这) ===== -->\n<text x=\"16\" y=\"22\" font-size=\"12.5\" font-weight=\"700\" fill=\"#b8770b\">🔬 第一步:拆开一只光模块,看里面</text>\n<rect x=\"12\" y=\"32\" width=\"336\" height=\"92\" rx=\"10\" fill=\"#fffaf0\" stroke=\"#f0a500\" stroke-width=\"2\"/>\n<text x=\"20\" y=\"46\" font-size=\"9\" fill=\"#b8770b\">这就是那个金色\"光模块\"的外壳,里面装着↓</text>\n<text x=\"16\" y=\"86\" font-size=\"8.5\" fill=\"#3b82f6\">电进→</text>\n<!-- ② 电芯片 -->\n<rect x=\"40\" y=\"60\" width=\"58\" height=\"44\" rx=\"4\" fill=\"#2b3744\"/>\n<text x=\"69\" y=\"80\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">电芯片</text>\n<text x=\"69\" y=\"93\" font-size=\"7.5\" fill=\"#aebccc\" text-anchor=\"middle\">DSP/驱动</text>\n<circle cx=\"40\" cy=\"60\" r=\"8.5\" fill=\"#2f6df0\"/><text x=\"40\" y=\"64\" font-size=\"10\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">2</text>\n<line x1=\"98\" y1=\"82\" x2=\"112\" y2=\"82\" stroke=\"#3b82f6\" stroke-width=\"2\" marker-end=\"url(#aro)\"/>\n<!-- ① 激光器 -->\n<rect x=\"112\" y=\"60\" width=\"58\" height=\"44\" rx=\"4\" fill=\"#3a2b50\"/>\n<text x=\"141\" y=\"80\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">激光器</text>\n<text x=\"141\" y=\"93\" font-size=\"7.5\" fill=\"#c9b8e6\" text-anchor=\"middle\">光芯片</text>\n<circle cx=\"112\" cy=\"60\" r=\"8.5\" fill=\"#7c3aed\"/><text x=\"112\" y=\"64\" font-size=\"10\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">1</text>\n<line x1=\"170\" y1=\"82\" x2=\"184\" y2=\"82\" stroke=\"#f0a500\" stroke-width=\"2\" marker-end=\"url(#arl)\"/>\n<!-- ④ 调制器(旁支) -->\n<rect x=\"184\" y=\"60\" width=\"50\" height=\"44\" rx=\"4\" fill=\"#1f3a4d\" stroke=\"#5a7a8c\" stroke-dasharray=\"4 3\"/>\n<text x=\"209\" y=\"80\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">调制器</text>\n<text x=\"209\" y=\"93\" font-size=\"7\" fill=\"#9fc4d6\" text-anchor=\"middle\">旁支</text>\n<circle cx=\"184\" cy=\"60\" r=\"8.5\" fill=\"#0ea5b7\"/><text x=\"184\" y=\"64\" font-size=\"10\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">4</text>\n<line x1=\"234\" y1=\"82\" x2=\"248\" y2=\"82\" stroke=\"#f0a500\" stroke-width=\"2\" marker-end=\"url(#arl)\"/>\n<!-- ③ 光器件 -->\n<rect x=\"248\" y=\"60\" width=\"60\" height=\"44\" rx=\"4\" fill=\"#1f4d3a\"/>\n<text x=\"278\" y=\"80\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">光器件</text>\n<text x=\"278\" y=\"93\" font-size=\"7\" fill=\"#b8e0c9\" text-anchor=\"middle\">透镜/隔离</text>\n<circle cx=\"248\" cy=\"60\" r=\"8.5\" fill=\"#16a34a\"/><text x=\"248\" y=\"64\" font-size=\"10\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">3</text>\n<line x1=\"308\" y1=\"82\" x2=\"324\" y2=\"82\" stroke=\"#f7b733\" stroke-width=\"3\" stroke-linecap=\"round\"/>\n<text x=\"316\" y=\"100\" font-size=\"8\" fill=\"#b8770b\" text-anchor=\"middle\">光出</text>\n\n<text x=\"100\" y=\"138\" font-size=\"11\" font-weight=\"700\" fill=\"#5a6b7b\" text-anchor=\"middle\">↓ 这只光模块,插进下面的系统里用 ↓</text>\n\n<!-- ===== 第二步:光模块插进系统(⑤⑥⑦⑧在这) ===== -->\n<text x=\"16\" y=\"162\" font-size=\"12.5\" font-weight=\"700\" fill=\"#5a6b7b\">🖥️ 第二步:这只光模块插进系统</text>\n<!-- 服务器 -->\n<rect x=\"12\" y=\"172\" width=\"120\" height=\"78\" rx=\"8\" fill=\"#eef1f7\" stroke=\"#a9b4c6\" stroke-width=\"2\"/>\n<text x=\"22\" y=\"187\" font-size=\"9\" font-weight=\"700\" fill=\"#5a6b7b\">服务器</text>\n<circle cx=\"122\" cy=\"180\" r=\"8\" fill=\"#2f6df0\"/><text x=\"122\" y=\"184\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">8</text>\n<rect x=\"22\" y=\"194\" width=\"58\" height=\"46\" rx=\"4\" fill=\"#1f7a4d\"/>\n<rect x=\"30\" y=\"202\" width=\"42\" height=\"30\" rx=\"3\" fill=\"#2b3744\"/><text x=\"51\" y=\"221\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">GPU</text>\n<!-- 服务器端口上的光模块⑤ -->\n<rect x=\"96\" y=\"208\" width=\"42\" height=\"15\" rx=\"2\" fill=\"#f4a300\" stroke=\"#c98300\"/>\n<text x=\"117\" y=\"219\" font-size=\"7.5\" font-weight=\"700\" fill=\"#5a3a00\" text-anchor=\"middle\">光模块</text>\n<circle cx=\"96\" cy=\"206\" r=\"8\" fill=\"#d97706\"/><text x=\"96\" y=\"210\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">5</text>\n<!-- 光纤⑥ -->\n<path d=\"M138,213 C168,213 192,213 222,213\" fill=\"none\" stroke=\"#f0a500\" stroke-width=\"2.5\"/>\n<path d=\"M138,218 C168,218 192,218 222,218\" fill=\"none\" stroke=\"#f7b733\" stroke-width=\"2.5\"/>\n<circle cx=\"180\" cy=\"196\" r=\"8\" fill=\"#16a34a\"/><text x=\"180\" y=\"200\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">6</text>\n<text x=\"180\" y=\"236\" font-size=\"8\" fill=\"#b8770b\" text-anchor=\"middle\">光纤</text>\n<!-- 交换机 -->\n<rect x=\"222\" y=\"172\" width=\"126\" height=\"78\" rx=\"8\" fill=\"#2c3744\" stroke=\"#1c242e\" stroke-width=\"2\"/>\n<text x=\"290\" y=\"187\" font-size=\"9\" font-weight=\"700\" fill=\"#d3dbe8\" text-anchor=\"middle\">交换机</text>\n<rect x=\"222\" y=\"208\" width=\"42\" height=\"15\" rx=\"2\" fill=\"#f4a300\" stroke=\"#c98300\"/>\n<text x=\"243\" y=\"219\" font-size=\"7.5\" font-weight=\"700\" fill=\"#5a3a00\" text-anchor=\"middle\">光模块</text>\n<circle cx=\"264\" cy=\"206\" r=\"8\" fill=\"#d97706\"/><text x=\"264\" y=\"210\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">5</text>\n<rect x=\"272\" y=\"226\" width=\"68\" height=\"18\" rx=\"3\" fill=\"#0f151d\" stroke=\"#7c3aed\"/>\n<text x=\"306\" y=\"238\" font-size=\"8\" font-weight=\"700\" fill=\"#b794f6\" text-anchor=\"middle\">交换ASIC</text>\n<circle cx=\"272\" cy=\"226\" r=\"8\" fill=\"#7c3aed\"/><text x=\"272\" y=\"230\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">7</text>\n\n<!-- 一句话拓扑 -->\n<rect x=\"12\" y=\"262\" width=\"336\" height=\"40\" rx=\"9\" fill=\"#f4f7fc\" stroke=\"#e2e8f2\"/>\n<text x=\"24\" y=\"280\" font-size=\"10\" font-weight=\"700\" fill=\"#475569\">两头插:服务器/GPU ↔ 光模块 ↔ 光纤 ↔ 光模块 ↔ 交换机</text>\n<text x=\"24\" y=\"295\" font-size=\"9\" fill=\"#7b8497\">光模块一头接电(连GPU)、一头接光(连光纤);交换ASIC在交换机里。</text>\n<text x=\"16\" y=\"322\" font-size=\"9.5\" fill=\"#9aa9c2\">📖 ①-⑧ 每个是什么、怎么连,看下面大字解释 ↓</text>\n</svg>", "flow": "先拆开一只光模块看里面(上游零件都在这盒子里):\n① 激光器(光芯片):会发激光的小芯片,把电变成一束光。\n② 电芯片(DSP/驱动):处理芯片,先把电信号整理干净、再驱动激光器。\n③ 光器件(透镜/隔离器/FAU):不发光的小零件,把激光对准、塞进光纤。\n④ 调制器:给激光“装数据”的零件;短距常和①激光器做在一起,长距才单独用(旁支)。\n—— ①②③④ 装进一个金色盒子,就是 ⑤光模块。\n⑤ 光模块:能插拔的“电↔光翻译收发器”,插在机器端口上。\n⑥ 光纤:一根细玻璃丝,光在里面跑。\n⑦ 交换机/交换ASIC:交换机是中转站,里面的交换ASIC决定数据送哪台。\n⑧ 服务器/GPU:真正算 AI 的机器。\n怎么连:GPU 的端口插一个⑤光模块 →一根⑥光纤→ 交换机端口也插一个⑤光模块 →进⑦交换机。光模块一边接电(连GPU)、一边接光(连光纤)。"}};
+const TODAY="预览·光通信v9";
+const GLOBAL_PRE={};
+function preBanner(){
+  const el=document.getElementById('prebanner');
+  if(TAB!=='pre'){el.innerHTML='';return;}
+  let html='';
+  if(GLOBAL_PRE&&GLOBAL_PRE.items&&GLOBAL_PRE.items.length){
+    const chips=GLOBAL_PRE.items.map(it=>`<span class="gchip ${it.pct>0?'up':it.pct<0?'down':'flat'}">${it.name} ${it.pct>0?'+':''}${it.pct}%</span>`).join('');
+    html+=`<div class="gbanner"><div class="gh">🌙 隔夜外盘 · ${GLOBAL_PRE.trade_date||''}<span class="gby">盯盘员提供</span></div><div class="gchips">${chips}</div>${GLOBAL_PRE.summary?`<div class="gsum">💡 ${GLOBAL_PRE.summary}</div>`:''}</div>`;
+  }
+  html+=globalEvents();   // 全局事件雷达(B):所有自选股按日期混排
+  // 通用解释只在这里说一次(不再每卡重复)
+  html+=`<div class="prenote">💡 下面每只的"开盘参考"是它的<b>昨收价 + 近20日区间</b>。"跳空"=开盘价和昨收差很多(高开=一开盘就比昨天高、低开=一开盘就低),开盘瞄一眼心里有数即可——<b>买不买你自己定,这里不给建议</b>。个股公告由看板抓、外盘由盯盘员提供,仅供参考、不预测涨跌。</div>`;
+  el.innerHTML=html;
+}
+function repMonths(t){const m=String(t).match(/(\d{4})-(\d{2})/);const td=TODAY.match(/(\d{4})-(\d{2})/);if(!m||!td)return 0;return (+td[1]-+m[1])*12+(+td[2]-+m[2]);}
+function staleTag(t){const mo=repMonths(t);return mo>=6?` <span class="stale">⚠️ ${mo}个月前的研报·数据/预测可能已过时</span>`:'';}
+const grid=document.getElementById('grid'),chips=document.getElementById('chips');
+let filter='all',sort='pct',kw='',TAB='yanjiu';
+const TABHINT={yanjiu:"研究=这只股票的深度档案(公司速览/综合分析/研报精读),慢变、不被每日流水冲掉。",
+ pre:"盘前=每天开盘前看:隔夜外盘对它的影响、今日跳空注意、昨晚突发。",
+ post:"盘后=每天收盘后追加一条带日期动态(最新在上),看变化轨迹。"};
+const has=(s,t)=>(s.badges||[]).some(b=>b[0]===t);
+const hasNews=s=>{const p=(s.post||[])[0];return !!(p&&(p['公告']||p['龙虎']||p['财报']||p['异动']));};
+const cls=p=>p>0?'up':p<0?'down':'flat';
+const sc=v=>v==='高'?'high':v==='中'?'mid':v==='低'?'low':'na';
+function match(s){
+  if(kw){const k=kw.toLowerCase();if(!(s.name.toLowerCase().includes(k)||(s.code||'').includes(k)))return false;}
+  if(filter==='up')return s.pct>0; if(filter==='down')return s.pct<0;
+  if(filter==='news')return hasNews(s); if(filter==='risk')return has(s,'risk'); return true;
+}
+const sorter=(a,b)=> sort==='pct'?b.pct-a.pct : sort==='risk'?((has(b,'risk')-has(a,'risk'))||(a.pct-b.pct)) : 0;
+function daysUntil(d){const t=new Date(d+'T00:00:00'),n=new Date(TODAY.slice(0,10)+'T00:00:00');return Math.round((t-n)/86400000);}
+function evColor(e){if(e.type==='unlock')return e.level==='high'?'#e24b4a':e.level==='mid'?'#e07c16':'#8a929c';return e.type==='report'?'#2f6df0':'#159a57';}
+function evIcon(e){return e.type==='unlock'?'🔓':e.type==='report'?'📄':'💰';}
+function eventTimeline(s){
+  const evs=(s.events||[]);
+  if(!evs.length)return '';   // 没未来事件就不显示这块(绝不放空壳)
+  const items=evs.map(e=>{const dd=daysUntil(e.date);const col=evColor(e);
+    return `<div class="tli"><span class="tldot" style="background:${col}"></span><div class="tld">${e.date} <span class="tlrest">· 还有 ${dd} 天</span></div><div class="tlt">${evIcon(e)} ${e.text}</div></div>`;}).join('');
+  return `<div class="sec"><div class="sh">📅 事件雷达 · 未来要发生的事</div><div class="tl">${items}</div></div>`;
+}
+function globalEvents(){
+  const all=[];
+  STOCKS.forEach(s=>(s.events||[]).forEach(e=>all.push(Object.assign({name:s.name},e))));
+  all.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  if(!all.length)return `<div class="gbanner"><div class="gh">📅 近期事件雷达</div><div class="gempty">未来一段时间暂无解禁/财报/分红等日程(数据源里没有就不放,7月起半年报日历与财报季会自动出现)。</div></div>`;
+  const rows=all.slice(0,12).map(e=>`<div class="geo"><span class="gem">${e.date.slice(5)}</span><span class="gedot" style="background:${evColor(e)}"></span><span class="gen">${e.name}</span><span class="get">${evIcon(e)} ${e.text}</span></div>`).join('');
+  return `<div class="gbanner"><div class="gh">📅 近期事件雷达 · 全部自选股(最近在上)</div>${rows}</div>`;
+}
+function prodList(t){
+  // 把"核心产品"长串按 ①②③… 拆成每项一行,并加粗每项的要点(到第一个括号前)
+  if(!t)return '';
+  const re=/[①②③④⑤⑥⑦⑧⑨]/;
+  const boldLead=p=>{const m=p.match(/^([^(（]+)([(（][\s\S]*)?$/);return (m&&m[2])?`<b>${m[1].trim()}</b>${m[2]}`:p;};
+  if(re.test(t)){
+    const first=t.search(re);
+    const intro=t.slice(0,first).replace(/[:：]\s*$/,'').trim();
+    const parts=t.slice(first).split(re).map(x=>x.trim().replace(/[；;。]\s*$/,'')).filter(Boolean);
+    return (intro?`<div class="plintro">${intro}</div>`:'')+parts.map(p=>`<div class="pli">• ${boldLead(p)}</div>`).join('');
+  }
+  return `<div class="pli">${boldLead(t.replace(/。\s*$/,''))}</div>`;
+}
+function card(s){
+  const p=s.profile||{},hot=s.hot||{},syn=s.synth||{},reps=s.reports||[];
+  const sign=s.pct>0?'+':'';
+  const tag=s.mkt?`<span class="tag ${s.mkt}">${s.mktTxt}</span>`:`<span class="tag">${s.mktTxt||''}</span>`;
+  const price=s.price!=null?`现价 ¥${s.price}`:'';
+  // meta
+  const mp=[];
+  if(s.rel!=null){const rel=s.rel>0?`<span class="strong">强 +${s.rel}%</span>`:s.rel<0?`<span class="weak">弱 ${s.rel}%</span>`:'持平';mp.push(`相对大盘 ${rel}`);}
+  mp.push(`换手 <b>${s.turn!=null?s.turn+'%':'—'}</b>`);
+  if(s.ytd!=null)mp.push(`年初至今 <b>${s.ytd>0?'+':''}${s.ytd}%</b>`);
+  const badges=(s.badges||[]).map(b=>`<span class="badge ${b[0]}">${b[0]==='lhb'?'🏆':b[0]==='notice'?'📢':b[0]==='report'?'📄':'⚠️'} ${b[1]}</span>`).join('');
+  // 筛选「有风险/有动静」时,把具体内容前置到卡片顶部,一眼看到
+  let pin='';
+  if(filter==='risk'){
+    const r=(s.badges||[]).find(b=>b[0]==='risk');
+    if(r)pin=`<div class="pin risk">⚠️ 风险:${r[1]}</div>`;
+  }else if(filter==='news'){
+    const pp=(s.post||[])[0]||{};
+    const cats=[['📢公告',pp['公告']],['🏆龙虎',pp['龙虎']],['📈财报',pp['财报']],['⚡异动',pp['异动']]].filter(x=>x[1]).map(x=>x[0]);
+    if(cats.length)pin=`<div class="pin news">📢 今日动静:${cats.join(' · ')}<span class="pinhint">详情见「盘后」</span></div>`;
+  }
+  // 公司速览
+  let prof='';
+  if(p.biz)prof+=`<div class="kv"><b>主营:</b>${p.biz}</div>`;
+  if(p.chain)prof+=`<div class="chain"><b>🔗 产业链位置</b><div class="pre">${p.chain}</div></div>`;
+  if(p.scene&&p.scene_name)prof+=`<div class="boardlink" onclick="openFlow('${p.scene}','${s.code}')">🔗 点开看【${p.scene_name}】完整图(看它在第几环)▶</div>`;
+  if(p.makes)prof+=`<div class="makes">👉 本页这只(<b>${s.name}</b>)做的,就是这条链里的 <b>${p.makes}</b></div>`;
+  if(p.prod)prof+=`<div class="kv"><b>核心产品:</b></div>${prodList(p.prod)}`;
+  if(p.moat)prof+=`<div class="kv"><b>竞争力:</b>${p.moat}</div>`;
+  const pp=[];
+  if(p.posCN)pp.push(`<span class="pill cn">国内:${p.posCN}</span>`);
+  if(p.posGlobal)pp.push(`<span class="pill gl">国外:${p.posGlobal}</span>`);
+  if(p.bench)pp.push(`<span class="pill bench">对标:${p.bench}</span>`);
+  if(pp.length)prof+=`<div class="pos">${pp.join('')}</div>`;
+  if(p.verdict)prof+=`<div class="verdict"><b>🎯 地位研判:</b>${p.verdict}</div>`;
+  if(p.peers&&p.peers.length)prof+=`<div class="peers">🔗 同板块(${p.peer_board||''})的自选股 ${p.peers.length} 只:${p.peers.join('、')}<span class="peerhint">（随清单自动更新）</span></div>`;
+  if(p.terms&&p.terms.length)prof+=`<details class="terms2"><summary>📖 名词小课堂 · ${p.terms.length}个(看不懂的词点开,大白话+例子)</summary>${p.terms.map(t=>`<div class="ti2">· <b>${t[0]}</b> — ${t[1]}</div>`).join('')}</details>`;
+  const profSec=prof?`<div class="sec"><div class="sh">🏢 公司速览</div>${prof}</div>`:'';
+  // 为什么涨
+  let hotSec='';
+  const ev=(hot.events||[]).map(e=>`<span class="ev">${e}</span>`).join('');
+  if(ev||hot.chain){
+    hotSec=`<div class="sec"><div class="sh">🔥 近期关注点 / 异动原因</div><div class="hot">${ev?'<div class="lab">机构关注:</div>'+ev:''}${hot.chain?'<div style="margin-top:5px"><span class="lab">解读:</span>'+hot.chain+'</div>':''}</div></div>`;
+  }
+  // 综合分析(只留一段大白话;原八维标签已删)
+  let synSec='';
+  if(syn.text){
+    synSec=`<div class="sec"><div class="sh">📊 综合分析</div><div class="synth">${syn.text}</div></div>`;
+  }
+  // 研报财报
+  let repSec='';
+  if(reps.length){
+    const hasRecent=reps.some(r=>repMonths(r.t)<6);          // 这只票有没有近6个月的研报
+    const items=reps.map((r,idx)=>{
+      const mo=repMonths(r.t);
+      const hasDeep=(r.bk&&r.bk.length);                     // 有没有读到正文分点
+      if(mo>=6){                                             // 超6个月:默认不放;除非该股没有近6月研报,则留最新这一篇(折叠+过时标)
+        if(hasRecent||idx!==0) return '';
+        const gist=hasDeep?`📌 总:${r.concl}`:`《${r.concl}》<span class="note">— 未读到正文</span>`;
+        return `<div class="rep"><div class="rt">${r.t}${staleTag(r.t)}</div><div class="concl">${gist}</div><a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+      }
+      if(!hasDeep){                                          // 近6月但没读到正文:只给标题+链接
+        return `<div class="rep"><div class="rt">${r.t}</div><div class="concl">《${r.concl}》<span class="note">— 未读到正文</span></div><a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+      }
+      const bks=(r.bk||[]).map(b=>`<div class="bki">· <b>${b[0]}</b>:${b[1]}</div>`).join('');
+      const more=`<details class="more"><summary>精读脉络(结论+证据)</summary>${bks}</details>`;
+      return `<div class="rep"><div class="rt">${r.t}</div><div class="concl">📌 总:${r.concl}</div>${more}<a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+    }).filter(x=>x).join('');
+    // 去重名词框(只统计仍显示的<=2年研报)
+    const seen={},allTerms=[];
+    reps.forEach(r=>{if(repMonths(r.t)<=24)(r.tm||[]).forEach(t=>{if(t&&t[0]&&!seen[t[0]]){seen[t[0]]=1;allTerms.push(t);}});});
+    const glossary=(items&&allTerms.length)?`<details class="more glossary"><summary>📖 本页名词解释（${allTerms.length} 个）</summary>${allTerms.map(t=>`<div class="ti"><b>${t[0]}</b> ${t[1]} <span class="tsrc">${t[2]||''}</span></div>`).join('')}</details>`:'';
+    repSec=`<div class="sec"><div class="sh">📄 研报精读(总:结论 / 分:脉络证据)</div>${items||'<div class="empty2">近2年无新研报</div>'}${glossary}</div>`;
+  }
+  const picSec=s.pic?`<div class="pic">💡 ${s.pic}</div>`:'';
+  // 公告精读(研究·仓库新板块):结构先就位,正文总分第二步接入;暂无则隐藏
+  let notSec='';
+  if(s.notices&&s.notices.length){
+    let subst=s.notices.filter(n=>(n.bk||[]).length);       // 实质性:有分点(业务/合同/增减持/风险等)
+    const proc=s.notices.filter(n=>!(n.bk||[]).length);     // 程序性:换届/决议/聘任等,没分点
+    subst.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));  // 新→旧
+    const dropped=subst.length-3;                           // 只留最新3条实质公告,旧的按时间淘汰
+    subst=subst.slice(0,3);
+    const cap=dropped>0?`<div class="note" style="margin:2px 0 6px">只显示最新 3 条实质公告,更早的 ${dropped} 条已按时间淘汰(避免越堆越多)。</div>`:'';
+    const substHTML=subst.map(n=>`<div class="rep" style="border-left-color:#7bb0f5;background:#fafcff"><div class="rt">${n.t}</div><div class="concl">📌 总:${n.concl}</div>${(n.bk||[]).map(b=>`<div class="bki">· <b>${b[0]}</b>:${b[1]}</div>`).join('')}<a href="${n.url||'#'}" target="_blank" rel="noreferrer noopener">🔗 看原文</a></div>`).join('');
+    const procHTML=proc.length?`<div class="rep proc"><div class="rt">📋 常规通知 · ${proc.length}条<span class="note">(换届/决议/聘任等事务性)</span></div>${proc.map(n=>`<div class="pli">• <a href="${n.url||'#'}" target="_blank" rel="noreferrer noopener">《${n.t}》</a>${n.concl?'<span class="note"> — '+n.concl+'</span>':''}</div>`).join('')}</div>`:'';
+    if(substHTML||procHTML)notSec=`<div class="sec"><div class="sh">📋 公告精读</div>${cap}${substHTML}${procHTML}</div>`;
+  }
+  const eventSec=eventTimeline(s);
+  const yanjiu=`${profSec}${eventSec}${hotSec}${repSec}${notSec}${picSec}${synSec}`;   // 研究=仓库:速览/事件雷达/综合/研报精读/公告精读
+  const body=TAB==='pre'?preHTML(s):TAB==='post'?postHTML(s):yanjiu;
+  return `<div class="card ${cls(s.pct)}"><div class="strip"></div><div class="body">
+    <div class="row1"><div><span class="name">${s.name}</span>${tag}<span class="code">${s.code||''}</span><br><button class="zoom" onclick="openZoom('${s.code}')">🔍 放大阅读</button></div>
+      <div class="pct">${sign}${s.pct}%<small>${price}</small></div></div>
+    ${pin}
+    <div class="meta">${mp.map(x=>'<span>'+x+'</span>').join('')}</div>
+    ${badges?`<div class="badges">${badges}</div>`:''}
+    ${body}</div></div>`;
+}
+function preHTML(s){
+  const p=s.pre;
+  if(!p)return `<div class="empty2">🌅 盘前暂无记录(每个交易日开盘前自动生成)</div>`;
+  let h='';
+  if(p.influence)h+=`<div class="pblk core"><span class="lab">🌙 外盘对它的影响:</span>${p.influence}</div>`;
+  if(p.event)h+=`<div class="pblk"><span class="lab">📅 临近事件:</span>${p.event}</div>`;
+  if(p.yesterday)h+=`<div class="pblk"><span class="lab">📊 昨日小结:</span>${p.yesterday}</div>`;
+  if(p.open)h+=`<div class="pblk"><span class="lab">⚡ 开盘参考:</span>${p.open}</div>`;
+  return `<div class="sec">${h||'<div class="empty2">盘前暂无</div>'}</div>`;
+}
+function postHTML(s){
+  const arr=s.post;
+  if(!arr||!arr.length)return `<div class="empty2">🌆 盘后暂无记录<br>每个交易日收盘后在这里追加一条带日期动态(最新在上):今日异动小结 + 新公告/龙虎榜/财报。</div>`;
+  const ents=arr.map((e,i)=>`<div class="ent ${i===0?'today':''}"><div class="date">📆 ${e.date}${i===0?'<span class="new">最新</span>':''}</div>`+
+    [['⚡ 异动',e['异动']],['📢 公告',e['公告']],['🏆 龙虎榜',e['龙虎']],['📈 财报',e['财报']]].filter(x=>x[1]).map(x=>`<div class="li"><span class="k">${x[0]}</span>${x[1]}</div>`).join('')+`</div>`).join('');
+  return `<div class="sh">🌆 盘后时间线(最新在上,每天追加)</div><div class="tl">${ents}</div>`;
+}
+function colorPct(s){return String(s).replace(/([+＋][\d.]+\s*%)/g,'<span class="up">$1</span>').replace(/(-[\d.]+\s*%)/g,'<span class="dn">$1</span>');}
+function openZoom(code){const s=STOCKS.find(x=>x.code===code);if(!s)return;
+  const prev=TAB;TAB='yanjiu';                 // 放大=这只票的完整页:研究 + 盘前 + 盘后,一次看全
+  let html=card(s);
+  html+=`<div class="card"><div class="body"><div class="sh" style="margin-top:0">🌅 盘前</div>${preHTML(s)}</div></div>`;
+  html+=`<div class="card"><div class="body">${postHTML(s)}</div></div>`;
+  TAB=prev;
+  const w=document.getElementById('zoomwrap');w.innerHTML=html;
+  w.querySelectorAll('details').forEach(d=>d.open=true);
+  document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}
+function closeZoom(){document.getElementById('modal').style.display='none';document.body.style.overflow='';}
+function openFlow(key,code){const b=BOARDS[key];if(!b)return;
+  const s=code?STOCKS.find(x=>x.code===code):null;const pr=(s&&s.profile)||{};
+  let same='';
+  if(pr.role){
+    const peers=STOCKS.filter(x=>x.code!==code&&((x.profile||{}).role===pr.role)).map(x=>x.name);
+    same=peers.length?`跟【${s.name}】做相同的(都在「${pr.role}」这一环)还有:${peers.join('、')}`
+                      :`你的关注列表里,目前就【${s.name}】一只做「${pr.role}」这一环。`;
+  }
+  const w=document.getElementById('zoomwrap');
+  w.innerHTML=`<div class="card"><div class="body"><div class="sh" style="margin-top:0">📦 ${b.name}</div>`+
+    `<div class="vdiag">${b.svg}</div>`+
+    (s&&pr.makes?`<div class="makes big">👉 这只【${s.name}】做的,就是图里的 <b>${pr.makes}</b></div>`:'')+
+    `<div class="flow big"><b>⚙️ 这条链怎么运作(①-⑧ 大白话)</b><div class="pre">${b.flow}</div></div>`+
+    (same?`<div class="who big"><b>🏭 跟这只做相同的股票</b><div class="pre">${same}</div></div>`:'')+
+    `</div></div>`;
+  document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZoom();});
+function render(){const list=STOCKS.filter(match).sort(sorter);
+  document.getElementById('cnt').textContent=list.length;
+  preBanner();
+  grid.innerHTML=list.length?list.map(card).join(''):'<div class="empty">没有符合条件的股票</div>';}
+chips.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+  chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');filter=c.dataset.f;render();});
+document.getElementById('q').addEventListener('input',e=>{kw=e.target.value.trim();render();});
+document.getElementById('sort').addEventListener('change',e=>{sort=e.target.value;render();});
+document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');TAB=t.dataset.t;
+  document.getElementById('tabhint').textContent=TABHINT[TAB];render();});
+render();
+</script></body></html>
