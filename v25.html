@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自选股信息速览表</title>
+<style>
+:root{--up:#e8453c;--down:#15a35a;--flat:#8a8f99;--bg:#eef0f4;--card:#fff;--ink:#1d2330;--sub:#6b7280;--line:#e9ebf1;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);font-size:15px;}
+header{position:sticky;top:0;z-index:5;background:#fff;border-bottom:1px solid var(--line);padding:12px 14px 8px;}
+.h-title{font-size:17px;font-weight:700;}.h-sub{font-size:12px;color:var(--sub);margin-top:2px;}
+.toolbar{display:flex;gap:8px;align-items:center;margin-top:10px;}
+.search{flex:1;border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:14px;outline:none;}
+select{border:1px solid var(--line);border-radius:20px;padding:7px 8px;font-size:13px;background:#fff;}
+.chips{display:flex;gap:7px;overflow-x:auto;padding:9px 14px 4px;scrollbar-width:none;}.chips::-webkit-scrollbar{display:none;}
+.chip{flex:none;border:1px solid var(--line);background:#fff;color:var(--sub);border-radius:16px;padding:5px 12px;font-size:13px;white-space:nowrap;cursor:pointer;}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+.legend{font-size:11px;color:var(--sub);padding:6px 14px 0;line-height:1.6;}
+main{padding:10px 12px 40px;display:grid;grid-template-columns:1fr;gap:13px;}
+@media(min-width:880px){main{grid-template-columns:1fr 1fr;}}
+.card{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(20,30,60,.05);}
+.strip{height:5px;}.card.up .strip{background:var(--up);}.card.down .strip{background:var(--down);}.card.flat .strip{background:var(--flat);}
+.body{padding:14px 15px 15px;}
+.row1{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.name{font-size:17px;font-weight:700;}.code{font-size:12px;color:var(--sub);margin-left:6px;}
+.tag{font-size:11px;color:#fff;background:#8a93a6;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;}
+.tag.kc{background:#7b61ff;}.tag.cy{background:#2f9e6b;}
+.pct{font-size:22px;font-weight:800;text-align:right;line-height:1;}.pct small{font-size:12px;font-weight:600;display:block;color:var(--sub);margin-top:3px;}
+.up .pct{color:var(--up);}.down .pct{color:var(--down);}.flat .pct{color:var(--flat);}
+.meta{display:flex;gap:16px;margin:9px 2px 0;font-size:12px;color:var(--sub);flex-wrap:wrap;}.meta b{color:var(--ink);font-weight:600;}
+.strong{color:var(--up);font-weight:700;}.weak{color:var(--down);font-weight:700;}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;}
+.badge{font-size:11px;border-radius:6px;padding:2px 7px;}
+.badge.risk{background:#fde7ee;color:var(--up);}.badge.lhb{background:#fff3e0;color:#c47a14;}
+.badge.notice{background:#e8f0ff;color:#2f6df0;}.badge.report{background:#e7f7ef;color:#159a57;}
+.sec{margin-top:14px;}.sh{font-size:13px;font-weight:700;margin-bottom:6px;}
+.kv{font-size:12.5px;line-height:1.65;color:#3a4150;margin:3px 0;}.kv b{color:var(--ink);}
+.pos{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
+.pill{font-size:11px;border-radius:6px;padding:2px 8px;background:#f1f3f7;color:#4b5563;}
+.pill.cn{background:#fff3e0;color:#c47a14;}.pill.gl{background:#e8f0ff;color:#2f6df0;}.pill.bench{background:#f0eaff;color:#7b4fe0;}
+.verdict{margin-top:8px;font-size:12.5px;line-height:1.65;color:#3a2f1d;background:#fff8e6;border:1px solid #ffe6a8;border-radius:9px;padding:9px 11px;}.verdict b{color:#b8860b;}
+.chain,.flow{margin:7px 0;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.62;}
+.chain{background:#eef6ff;border:1px solid #d6e6fb;}.chain>b{color:#2f6df0;display:block;margin-bottom:3px;}
+.flow{background:#f7f1ff;border:1px solid #e6dafb;}.flow>b{color:#7b4fe0;display:block;margin-bottom:3px;}
+.chain .pre,.flow .pre,.who .pre{white-space:pre-wrap;color:#3a4150;}
+.who{margin:7px 0;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.62;background:#f1faf4;border:1px solid #cdeedd;}.who>b{color:#159a57;display:block;margin-bottom:3px;}
+.flow.big,.who.big{font-size:17.5px;line-height:2.05;padding:14px 16px;}.flow.big>b,.who.big>b{font-size:18px;margin-bottom:8px;}
+.makes.big{font-size:17px;line-height:1.9;padding:13px 15px;}
+.vdiag{margin:8px 0;}.vdiag svg{width:100%;height:auto;display:block;border:1px solid #e7edf6;border-radius:11px;}
+.boardlink{margin:7px 0;background:#eef6ff;border:1px solid #cfe0fb;border-radius:9px;padding:9px 11px;font-size:12.5px;font-weight:600;color:#2f6df0;cursor:pointer;line-height:1.5;}
+.boardlink:active{background:#dfecff;}
+.flowtip{font-size:11.5px;color:#7b8497;background:#f4f7fc;border-radius:8px;padding:7px 9px;margin-bottom:8px;line-height:1.55;}
+.makes{margin:6px 0;background:#fff7e6;border:1px solid #ffe0a3;border-radius:9px;padding:8px 11px;font-size:12.5px;line-height:1.6;color:#7a5300;}.makes b{color:#b8770b;}
+.peers{margin:7px 0;background:#eef4ff;border:1px solid #d6e4fb;border-radius:9px;padding:7px 11px;font-size:12px;line-height:1.6;color:#2f4a73;}.peers .peerhint{color:#9aa9c2;font-size:10.5px;margin-left:4px;}
+.terms2{margin-top:9px;background:#f6f4ff;border-radius:9px;padding:6px 11px;}
+.terms2>summary{color:#5b3fd0;font-weight:600;font-size:12px;cursor:pointer;list-style:none;}
+.terms2>summary::-webkit-details-marker{display:none;}
+.terms2>summary::before{content:'▸ ';}.terms2[open]>summary::before{content:'▾ ';}
+.terms2 .ti2{font-size:12px;color:#3a4150;line-height:1.6;margin:5px 0;}.terms2 .ti2 b{color:#5b3fd0;}
+.hot{background:#fff8f3;border:1px solid #ffe6d2;border-radius:9px;padding:10px 11px;font-size:12.5px;line-height:1.65;color:#5a4636;}
+.hot .lab{font-weight:700;color:#c4581a;}.hot a{color:#2f6df0;text-decoration:none;}.hot .ev{display:block;margin:2px 0;}.hot .nodrv{color:var(--sub);}
+.synth{font-size:12.5px;line-height:1.7;color:#3a4150;background:#f7f8fa;border-radius:9px;padding:10px 11px;}.synth i{color:#2f6df0;font-style:normal;font-weight:600;}
+.scan{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.si{font-size:11px;border-radius:6px;padding:2px 7px;background:#f1f3f7;color:#566;}
+.si b{margin-left:3px;}.si.high b{color:#2f6df0;}.si.mid b{color:#8a929c;}.si.low b{color:#e07c16;}.si.na b{color:#b8bdc4;}
+.pin{font-size:12.5px;font-weight:600;border-radius:8px;padding:7px 10px;margin:9px 0 2px;line-height:1.5;}
+.pin.risk{background:#fde7ee;color:#d23f6a;}.pin.news{background:#e8f1ff;color:#2f6df0;}
+.pin .pinhint{font-weight:400;font-size:11px;color:#8a929c;margin-left:7px;}
+.pli{font-size:12.5px;line-height:1.7;color:#3a4150;margin:3px 0 3px 2px;}
+.plintro{font-size:12px;color:#8a929c;margin:3px 0;}
+.rep.proc{background:#fafafa;border-left-color:#c9ced6;}
+.tl{position:relative;padding-left:18px;margin-top:6px;}
+.tl:before{content:"";position:absolute;left:4px;top:5px;bottom:5px;width:2px;background:var(--line);}
+.tli{position:relative;margin-bottom:13px;}.tli:last-child{margin-bottom:2px;}
+.tldot{position:absolute;left:-18px;top:3px;width:11px;height:11px;border-radius:50%;border:2px solid var(--bg);box-sizing:border-box;}
+.tld{font-size:12.5px;font-weight:600;}.tlrest{font-weight:400;color:#8a929c;}
+.tlt{font-size:12.5px;color:#3a4150;margin-top:1px;line-height:1.55;}
+.geo{display:flex;align-items:center;gap:9px;padding:7px 2px;border-top:1px solid var(--line);font-size:12.5px;}
+.geo:first-of-type{border-top:none;}
+.gem{font-weight:600;color:#566;min-width:38px;}
+.gedot{width:9px;height:9px;border-radius:50%;flex:none;}
+.gen{font-weight:600;}.get{color:#3a4150;}
+.gempty{font-size:12px;color:#8a929c;line-height:1.6;padding:4px 2px;}
+.rep{border:1px solid #e6e2f5;border-left:4px solid #b9a6ef;border-radius:9px;padding:9px 11px;margin:11px 0;background:#fcfbff;font-size:12.5px;line-height:1.6;}
+.glossary{margin-top:12px;background:#f6f4ff;border-radius:9px;padding:5px 11px 8px;}.glossary>summary{color:#5b3fd0;font-weight:600;}
+.rep .rt{font-weight:700;color:var(--ink);}
+.rep .stale{color:#c4581a;font-size:10px;font-weight:600;background:#fff3e6;border-radius:5px;padding:1px 5px;white-space:nowrap;}
+.rep .concl{color:#222;margin:3px 0;background:#fbfbe9;border-radius:6px;padding:5px 8px;}
+.rep .bki{color:#4a5160;margin:4px 0 4px 2px;line-height:1.55;}.rep .bki b{color:var(--ink);}
+.rep .more{margin:5px 0 3px;}
+.rep .more summary{font-size:11.5px;color:#7b4fe0;cursor:pointer;list-style:none;}
+.rep .more summary::-webkit-details-marker{display:none;}
+.rep .more summary::before{content:'▸ ';}
+.rep .more[open] summary{margin-bottom:3px;}.rep .more[open] summary::before{content:'▾ ';}
+.rep .kd{margin-top:6px;font-size:11.5px;color:#2c3e50;background:#eef6ff;border-radius:6px;padding:6px 8px;line-height:1.5;}
+.rep .lite{color:#555;margin:3px 0;}.rep .lite .note{color:#aab0b8;font-size:11px;}
+.rep a{font-size:11.5px;color:#2f6df0;text-decoration:none;display:inline-block;margin-top:4px;}
+.pic{margin-top:13px;font-size:13px;color:#2c3340;background:#eef1f6;border-radius:9px;padding:9px 11px;line-height:1.6;}.pic b{color:var(--ink);}
+.disc{font-size:11px;color:#9aa0a8;text-align:center;padding:6px 20px 30px;line-height:1.6;}
+.empty{grid-column:1/-1;text-align:center;color:var(--sub);padding:40px 0;}
+.rep .klab{font-size:11.5px;font-weight:700;color:#2c3e50;margin:7px 0 4px;}
+.kdt{width:100%;border-collapse:collapse;font-size:11.5px;background:#f4f9ff;border-radius:6px;overflow:hidden;}
+.kdt td{padding:5px 8px;border-bottom:1px solid #e3eefb;vertical-align:top;}.kdt tr:last-child td{border-bottom:none;}
+.kdt .kdk{color:#5a6573;width:42%;}.kdt .kdv{color:#1d2330;font-weight:600;}
+.kdt .up{color:var(--up);}.kdt .dn{color:var(--down);}
+.rep .terms{margin-top:8px;background:#f6f4ff;border-radius:8px;padding:7px 9px;}
+.rep .ti{font-size:11.5px;color:#3a4150;line-height:1.6;margin:4px 0;}.rep .ti b{color:#5b3fd0;}.rep .tsrc{font-size:10px;color:#aab0b8;margin-left:3px;}
+.zoom{font-size:11px;color:#2f6df0;background:#eef4ff;border:none;border-radius:12px;padding:3px 10px;cursor:pointer;margin-top:7px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(20,25,40,.55);z-index:50;overflow:auto;padding:0;}
+.modal-card{max-width:780px;margin:0 auto;background:var(--bg);border-radius:0;position:relative;padding:12px 12px 44px;min-height:100%;box-sizing:border-box;}
+.mclose{position:fixed;top:12px;right:12px;width:40px;height:40px;padding:0;border-radius:50%;background:rgba(20,25,40,.62);color:#fff;border:none;font-size:20px;line-height:40px;text-align:center;cursor:pointer;z-index:60;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+.zoomwrap{font-size:15px;padding:2px;}.zoomwrap .zoom{display:none;}.zoomwrap .card{box-shadow:none;}
+.zoomwrap .name{font-size:23px;}.zoomwrap .pct{font-size:28px;}.zoomwrap .sh{font-size:16px;}
+.zoomwrap .kv,.zoomwrap .synth,.zoomwrap .hot,.zoomwrap .verdict,.zoomwrap .pic,.zoomwrap .bki,.zoomwrap .concl,.zoomwrap .lite,.zoomwrap .ti,.zoomwrap .kdt,.zoomwrap .ev{font-size:15px;line-height:1.85;}
+.zoomwrap .pill,.zoomwrap .badge,.zoomwrap .si,.zoomwrap .klab,.zoomwrap .tsrc{font-size:13px;}
+.tabs{display:flex;background:#eef0f4;border-radius:11px;padding:3px;margin:10px 0 2px;}
+.tab{flex:1;text-align:center;padding:8px 0;font-size:14px;font-weight:600;color:var(--sub);border-radius:9px;cursor:pointer;}
+.tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(20,30,60,.12);}
+.tabhint{font-size:11px;color:var(--sub);padding:7px 2px 0;}
+.pre{background:#fff8ee;border:1px solid #ffe6c2;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.7;color:#5a4a32;margin-top:8px;}
+.pre .it{margin:4px 0;}.pre b{color:#7a5a1a;}
+.pre a,.ent a{color:#2f6df0;text-decoration:none;}
+#prebanner{padding:0 12px;}
+.gbanner{background:linear-gradient(180deg,#fff6ec,#fffdfa);border:1px solid #ffe0bd;border-radius:12px;padding:11px 13px;margin-bottom:4px;}
+.gh{font-size:13px;font-weight:700;color:#b8600f;}.gby{font-size:10px;color:#b9a06a;font-weight:400;margin-left:7px;}
+.gchips{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0;}
+.gchip{font-size:12px;border-radius:7px;padding:3px 9px;background:#f1f3f7;color:#566;font-weight:600;}
+.gchip.up{background:#fdeceb;color:var(--up);}.gchip.down{background:#e9f6ef;color:var(--down);}
+.gsum{font-size:12.5px;color:#5a4a32;line-height:1.6;}
+.prenote{font-size:11px;color:#9097a0;line-height:1.6;padding:4px 4px 2px;}.prenote b{color:#6b7280;}
+.pre .warn{color:#9a7b3a;font-size:11px;margin-top:5px;border-top:1px dashed #ecd9b5;padding-top:5px;}
+.empty2{color:var(--sub);font-size:12.5px;padding:16px 8px;text-align:center;background:#f7f8fa;border-radius:9px;margin-top:8px;line-height:1.7;}
+.pblk{font-size:12.5px;line-height:1.65;color:#3a4150;margin:8px 0;}.pblk .lab{font-weight:700;color:#b8600f;}
+.pblk.core{background:#fff8ee;border:1px solid #ffe6c2;border-radius:9px;padding:9px 11px;}.pblk.core b{color:#7a5a1a;}
+.tl{position:relative;margin-top:8px;padding-left:14px;}
+.tl:before{content:'';position:absolute;left:3px;top:4px;bottom:4px;width:2px;background:#e3e6ee;}
+.ent{position:relative;margin-bottom:13px;}
+.ent:before{content:'';position:absolute;left:-14px;top:3px;width:9px;height:9px;border-radius:50%;background:#2f6df0;border:2px solid #fff;}
+.ent.today:before{background:var(--up);}
+.ent .date{font-size:12.5px;font-weight:700;color:var(--ink);}
+.ent .date .new{font-size:10px;color:#fff;background:var(--up);border-radius:8px;padding:1px 6px;margin-left:6px;}
+.ent .li{font-size:12px;line-height:1.6;color:#3a4150;margin:3px 0;}
+.ent .li .k{display:inline-block;min-width:54px;color:var(--sub);vertical-align:top;}
+.ent .up{color:var(--up);font-weight:600;}.ent .down{color:var(--down);font-weight:600;}
+.pdtl{display:block;margin:4px 0 4px 12px;}
+.pdtl>summary{cursor:pointer;list-style:none;color:#2c3550;line-height:1.55;}
+.pdtl>summary::-webkit-details-marker{display:none;}
+.pdtl>summary::before{content:'▸ ';color:#2f6df0;font-weight:700;}
+.pdtl[open]>summary::before{content:'▾ ';}
+.pdtl .pdbody{margin:5px 0 2px 12px;padding:7px 9px;background:#f7f9fc;border-radius:7px;border-left:3px solid #cfe0fb;}
+.pdtl .pbki{color:#4a5160;margin:4px 0;line-height:1.55;}.pdtl .pbki b{color:var(--ink);}
+.pdtl .pdbody a{color:#2f6df0;text-decoration:none;display:inline-block;margin-top:4px;font-size:11.5px;}
+.ent .pfin{font-size:11.5px;color:#159a57;background:#eafaf1;border-radius:6px;padding:4px 8px;margin:4px 0 4px 12px;}
+</style></head><body>
+<header>
+  <div class="h-title">📊 自选股信息速览表</div>
+  <div class="h-sub">预览v25 · 共 <span id="cnt">3</span> 只 · 实时异动走飞书消息</div>
+  <div class="tabs" id="tabs"><div class="tab on" data-t="yanjiu">🔬 研究</div><div class="tab" data-t="pre">🌅 盘前</div><div class="tab" data-t="post">🌆 盘后</div></div>
+  <div class="tabhint" id="tabhint">研究=这只股票的深度档案(公司速览/综合分析/研报精读),慢变、不被每日流水冲掉。</div>
+  <div class="toolbar">
+    <input class="search" id="q" placeholder="搜名称或代码…">
+    <select id="sort"><option value="pct">按今日涨跌</option><option value="risk">风险优先</option></select>
+  </div>
+</header>
+<div class="chips" id="chips">
+  <div class="chip on" data-f="all">全部</div>
+  <div class="chip" data-f="up">🔴 上涨</div><div class="chip" data-f="down">🟢 下跌</div>
+  <div class="chip" data-f="news">📢 有动静</div><div class="chip" data-f="risk">⚠️ 有风险</div>
+</div>
+<div class="legend">📌 这是你自选股的【公开信息 · 人话速览】——把研报 / 公告 / 公司背景收拢成一页,说人话、不编。<b>只做信息整理,不荐股、不预测涨跌,买卖你自己判断。</b>卡片上沿 红涨绿跌;「近期关注点」找不到就写"未找到明确驱动"。</div>
+<div id="prebanner"></div>
+<main id="grid"></main>
+<div class="disc">⚠️ 仅供研究参考,不构成任何买卖建议,投资决策请自行判断。数据来自公开行情/研报。</div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeZoom()"><div class="modal-card"><button class="mclose" onclick="closeZoom()" aria-label="关闭">✕</button><div class="zoomwrap" id="zoomwrap"></div></div></div>
+<script>
+const DIM=["基本面","资金","估值","成长","技术","催化","情绪","风险"];
+// 每个维度的 高/中/低 翻译成本维度的人话(蓝=对它有利,橙=不利,灰=一般)。
+// 大脑评级口径:高=对它越有利(估值"高"=便宜、风险"高"=风险小),这里统一翻成不用反着想的词。
+const DIMWORD=[
+ {"高":"扎实","中":"一般","低":"偏弱"},   // 基本面
+ {"高":"流入","中":"中性","低":"流出"},   // 资金
+ {"高":"偏便宜","中":"合理","低":"偏贵"}, // 估值
+ {"高":"较快","中":"平稳","低":"放缓"},   // 成长
+ {"高":"偏强","中":"震荡","低":"偏弱"},   // 技术
+ {"高":"较多","中":"一般","低":"偏少"},   // 催化
+ {"高":"偏乐观","中":"中性","低":"偏谨慎"},// 情绪
+ {"高":"较低","中":"一般","低":"较高"}    // 风险(高=风险小→偏蓝,低=风险大→偏橙)
+];
+const dimWord=(i,v)=>(DIMWORD[i]&&DIMWORD[i][v])||v;
+const STOCKS=[{"name": "江丰电子", "code": "300666", "pct": 2.9, "price": 55.2, "mktTxt": "创业板", "profile": {"biz": "江丰电子做的是“溅射靶材”——造芯片时给硅片“喷镀金属”用的高纯金属原料,另外还做半导体设备的精密零部件。打个比方:芯片里那些细如发丝的金属“电线”,是一层层镀上去的,江丰卖的就是被镀上去的那块金属原料。", "chain": "在“造芯片用什么材料”这条链上,它在【④镀膜(PVD)环节】——给造好图形的硅片镀上金属导线。\n· 它做的“靶材”是这一步的核心耗材(每镀一层就消耗,反复用)。\n· 所有芯片(含AI芯片)都要镀金属、都离不开靶材,属于“卖铲子”的关键材料。", "makes": "④ 镀膜用的“靶材”(PVD溅射靶材:高纯铜/铝/钛/钽金属)", "prod": "①超高纯金属溅射靶材(纯度99.999%以上的铜/铝/钛/钽金属块,在芯片制造的镀膜环节被离子“打”成原子、镀到硅片上形成电路导线——造芯片必需的关键耗材);②半导体精密零部件(刻蚀机等设备里的腔体零件,第二增长曲线)。", "moat": "国内少数大规模打入台积电、中芯国际等先进制程供应链的靶材企业,纯度与良率达国际水平。", "posCN": "半导体靶材国产领先、第一梯队", "posGlobal": "★全球第二(2024年晶圆制造靶材市占率口径),份额持续扩大,部分进入7/14nm先进制程", "bench": "看竞争格局用:日本JX金属、美国霍尼韦尔Honeywell、日本东曹Tosoh(它是国产替代这几家的主力)", "verdict": "★真正的卡脖子环节 + 国产替代标杆。超高纯靶材此前几乎全靠进口,江丰实现突破、做到全球第二、并进入全球先进产线。所有芯片(含AI芯片)制造都要镀金属、离不开靶材,属于半导体材料里“卖铲子”的核心环节,战略意义大。(排名为2024年口径,会随时间变动)", "terms": [["靶材", "一块高纯金属原料(铜/铝/钛等),在镀膜时被离子打成原子、像喷漆一样镀到硅片上,形成芯片里的金属导线。"], ["溅射 / PVD", "PVD=物理气相沉积,说人话就是“物理喷镀金属”:拿离子去打那块靶材,把金属原子一颗颗轰出来、均匀沾到硅片上。"], ["硅片 / 晶圆", "芯片的“画布”,一块圆圆的高纯硅盘子,电路都刻在它上面。"], ["先进制程(7/14nm)", "芯片里线路的精细程度,数字越小越先进、越难做(台积电/中芯在拼这个)。"], ["精密零部件", "刻蚀机等芯片设备里的高精度金属腔体零件,也被海外垄断、江丰在国产替代。"]], "scene": "半导体材料", "scene_name": "一片硅片走过芯片产线(①-⑥)", "role": "靶材", "peers": ["西安奕材-U", "沪硅产业", "立昂微"], "peer_board": "半导体材料(靶材/硅片/石英/湿化学)"}}, {"name": "西安奕材-U", "code": "688783", "pct": 3.4, "price": 18.9, "mktTxt": "创业板", "profile": {"biz": "西安奕材专门造 12 英寸(300毫米)半导体大硅片——也就是芯片那块圆圆的“画布/地基”。它专攻 12 英寸这一种、做得大做得专,是国内出货量最大的 12 英寸硅片厂。", "chain": "在“造芯片用什么材料”这条链上,它在最最上游的【① 硅片(画布)】——没有这块画布,后面光刻/刻蚀/镀膜都无从谈起。\n· 它只专攻 12 英寸(最主流、最先进芯片用的尺寸)。\n· 这是被海外五巨头垄断、国产化率极低的“卡脖子地基”。", "makes": "① 大硅片(专攻 12 英寸,芯片的画布)", "prod": "12 英寸硅抛光片和外延片(把高纯多晶硅拉成单晶、切片、抛光/外延加工成的大圆盘,是几乎所有先进芯片的“画布”,所有电路都刻在它上面)。", "moat": "国内少数掌握 12 英寸大硅片量产的企业,重资产、技术门槛和客户认证门槛都极高。", "posCN": "国产 12 英寸大硅片第一梯队(按2024年出货量,中国大陆第一)", "posGlobal": "全球第六、约占6~7%;前五被日本信越、SUMCO、台湾环球晶、德国Siltronic、韩国SK 垄断超85%", "bench": "看竞争格局用:海外——信越、SUMCO、环球晶、Siltronic;国内同环节——沪硅产业(也在你关注列表里)", "verdict": "★半导体最硬核的卡脖子环节之一,12 英寸大硅片是所有先进芯片的“地基”。但⚠️它是“未盈利上市(-U)”:重资产、还在产能爬坡,前期巨额投入、利润为负是常态——它“还没赚钱”,靠规模换份额,盈利能力是最大不确定项,务必盯现金和量产进度。(排名为2024年口径)", "terms": [["12 英寸大硅片", "直径300毫米的圆形高纯硅盘子,是最主流、最先进芯片用的“画布”;尺寸越大、一片能切的芯片越多越划算,但越难做。"], ["衬底 / 晶圆", "就是这块硅片本身,芯片所有电路都建在它上面,所以叫地基/画布。"], ["外延片", "在硅片上再长一层更纯净的硅,某些芯片需要;也是硅片厂的活。"], ["-U(未盈利)", "股票名带 -U,表示公司还没实现盈利就上市了;成长想象空间大,但要特别盯它何时能赚钱、现金够不够。"], ["国产替代", "原来全靠进口、被海外卡着,国内企业把它做出来、替下进口货,这个过程就是国产替代。"]], "scene": "半导体材料", "scene_name": "一片硅片走过芯片产线(①-⑥)", "role": "大硅片", "peers": ["江丰电子", "沪硅产业", "立昂微"], "peer_board": "半导体材料(靶材/硅片/石英/湿化学)"}}, {"name": "沪硅产业", "code": "688126", "pct": 2.1, "price": 19.5, "mktTxt": "创业板", "profile": {"biz": "沪硅产业也是造半导体大硅片(芯片的“画布”)的,和西安奕材同一环;区别是它产品更全:12英寸、8英寸及以下都做,还做高端的 SOI 硅片。是国内规模最大的硅片企业之一。", "chain": "在“造芯片用什么材料”这条链上,它在最上游的【① 硅片(画布)】,和西安奕材同环节。\n· 区别:沪硅“全尺寸 + SOI(高端)”,西安奕材“专攻12英寸”。\n· 一样属于被海外垄断、国产化率极低的卡脖子“地基”。", "makes": "① 大硅片(全尺寸 + SOI 高端)", "prod": "①12英寸硅片(子公司上海新昇,2018年实现大陆300mm硅片产业化“零的突破”);②8英寸及以下抛光片/外延片;③SOI硅片(绝缘体上硅,一种特种高端硅片)。", "moat": "国内最早突破12英寸、规模最大之一,产品线全、还有SOI等高端;客户含台积电、中芯、华虹。", "posCN": "国内规模最大的硅片企业之一(约占国内20%份额)", "posGlobal": "全球份额仍低,被海外信越/SUMCO/环球晶/Siltronic/SK 五大厂垄断超85%", "bench": "看竞争格局用:海外五大硅片厂;国内同环节——西安奕材(也在你关注列表里)", "verdict": "★和西安奕材同属“大硅片地基”这个卡脖子环节,逻辑一致;它的特点是产品全、有SOI高端,基本盘比“专攻12英寸”更广。但硅片是周期性生意、长期薄利/微利,盈利弹性受行业周期影响大,是要盯的变量。", "terms": [["大硅片 / 衬底", "芯片的“画布/地基”,圆圆的高纯硅盘子;12英寸是最主流先进尺寸。"], ["SOI 硅片", "“绝缘体上硅”——在硅片中间夹一层绝缘层的特种高端硅片,用在射频、功率等特殊芯片上,门槛更高。"], ["外延片", "在硅片上再长一层更纯净的硅,某些芯片需要。"], ["8英寸 / 12英寸", "硅片直径(200/300毫米);越大一片切的芯片越多越划算,但越难做,12英寸最先进。"], ["国产替代", "原来全靠进口、被海外卡着,国内做出来替下进口,这个过程就是国产替代。"]], "scene": "半导体材料", "scene_name": "一片硅片走过芯片产线(①-⑥)", "role": "大硅片", "peers": ["江丰电子", "西安奕材-U", "立昂微"], "peer_board": "半导体材料(靶材/硅片/石英/湿化学)"}}];
+const BOARDS={"半导体材料": {"name": "一片硅片走过芯片产线(①-⑥)", "svg": "<svg viewBox=\"0 0 360 318\" xmlns=\"http://www.w3.org/2000/svg\" role=\"img\" font-family=\"-apple-system,'PingFang SC','Microsoft YaHei',sans-serif\">\n<title>一片硅片在芯片产线上走过一台台机器(①-⑥)</title><desc>①硅片(西安奕材/沪硅/立昂微)进产线,依次经②光刻机涂胶留保护盖→③刻蚀机把没盖住的吃成沟槽→④镀膜机喷金属(用江丰靶材)→⑤抛光机磨平,②-⑤重复几十层,⑥切割封测成芯片。光刻胶=保护盖:盖住的留下、没盖住的被刻掉。这4只做的是材料(硅片+靶材)不是机器。</desc>\n<defs>\n<marker id=\"arf\" markerWidth=\"7\" markerHeight=\"7\" refX=\"5\" refY=\"3\" orient=\"auto\"><path d=\"M0,0 L5,3 L0,6 Z\" fill=\"#aab4c2\"/></marker>\n<marker id=\"are\" markerWidth=\"6\" markerHeight=\"6\" refX=\"4\" refY=\"3\" orient=\"auto\"><path d=\"M0,0 L4,3 L0,6 Z\" fill=\"#79bfc6\"/></marker>\n<marker id=\"arl\" markerWidth=\"7\" markerHeight=\"7\" refX=\"5\" refY=\"3\" orient=\"auto\"><path d=\"M0,0 L5,3 L0,6 Z\" fill=\"#d6b06a\"/></marker>\n</defs>\n<rect x=\"0\" y=\"0\" width=\"360\" height=\"318\" rx=\"14\" fill=\"#fafdff\"/>\n<text x=\"16\" y=\"22\" font-size=\"12.5\" font-weight=\"700\" fill=\"#1d2433\">🏭 一片硅片走过芯片工厂的产线</text>\n<!-- 循环箭头 -->\n<path d=\"M252,50 C246,38 110,38 100,50\" fill=\"none\" stroke=\"#d6b06a\" stroke-width=\"1.2\" stroke-dasharray=\"4 3\" marker-end=\"url(#arl)\"/>\n<text x=\"176\" y=\"35\" font-size=\"8\" font-weight=\"700\" fill=\"#b07d3a\" text-anchor=\"middle\">↺ ②③④⑤ 重复几十层</text>\n<!-- ① 硅片进场 -->\n<circle cx=\"36\" cy=\"112\" r=\"13\" fill=\"#f3dd9b\" stroke=\"#cba94e\" stroke-width=\"1.4\"/><line x1=\"28\" y1=\"120\" x2=\"34\" y2=\"114\" stroke=\"#cba94e\" stroke-width=\"1.2\"/>\n<circle cx=\"24\" cy=\"101\" r=\"7.5\" fill=\"#74a9e0\"/><text x=\"24\" y=\"104.5\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">1</text>\n<text x=\"36\" y=\"141\" font-size=\"8\" font-weight=\"700\" fill=\"#8a6d24\" text-anchor=\"middle\">硅片</text>\n<line x1=\"50\" y1=\"112\" x2=\"70\" y2=\"112\" stroke=\"#aab4c2\" stroke-width=\"1.3\" marker-end=\"url(#arf)\"/>\n<!-- 传送带 -->\n<line x1=\"74\" y1=\"130\" x2=\"286\" y2=\"130\" stroke=\"#cbd2dc\" stroke-width=\"2\"/>\n<!-- ② 光刻机 -->\n<rect x=\"74\" y=\"54\" width=\"44\" height=\"38\" rx=\"3\" fill=\"#eef1f4\" stroke=\"#c5ccd6\"/>\n<rect x=\"81\" y=\"59\" width=\"30\" height=\"7\" rx=\"2\" fill=\"#dde3ea\"/>\n<circle cx=\"74\" cy=\"54\" r=\"7.5\" fill=\"#a187dc\"/><text x=\"74\" y=\"57.5\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">2</text>\n<text x=\"96\" y=\"83\" font-size=\"8.5\" font-weight=\"700\" fill=\"#6b4fb0\" text-anchor=\"middle\">光刻机</text>\n<rect x=\"80\" y=\"100\" width=\"32\" height=\"3\" fill=\"#c4b6e6\"/>\n<line x1=\"86\" y1=\"95\" x2=\"86\" y2=\"111\" stroke=\"#d9c2ea\" stroke-width=\"1.2\"/><line x1=\"96\" y1=\"95\" x2=\"96\" y2=\"111\" stroke=\"#d9c2ea\" stroke-width=\"1.2\"/><line x1=\"106\" y1=\"95\" x2=\"106\" y2=\"111\" stroke=\"#d9c2ea\" stroke-width=\"1.2\"/>\n<rect x=\"74\" y=\"123\" width=\"44\" height=\"6\" fill=\"#c2cdd9\"/>\n<rect x=\"79\" y=\"117\" width=\"9\" height=\"6\" fill=\"#e3a9cb\"/><rect x=\"92\" y=\"117\" width=\"9\" height=\"6\" fill=\"#e3a9cb\"/><rect x=\"105\" y=\"117\" width=\"9\" height=\"6\" fill=\"#e3a9cb\"/>\n<text x=\"96\" y=\"141\" font-size=\"7.5\" font-weight=\"700\" fill=\"#b5638f\" text-anchor=\"middle\">盖光刻胶</text>\n<!-- ③ 刻蚀机 -->\n<rect x=\"128\" y=\"54\" width=\"44\" height=\"38\" rx=\"3\" fill=\"#eef1f4\" stroke=\"#c5ccd6\"/>\n<rect x=\"135\" y=\"59\" width=\"30\" height=\"7\" rx=\"2\" fill=\"#dde3ea\"/>\n<circle cx=\"128\" cy=\"54\" r=\"7.5\" fill=\"#56b7c1\"/><text x=\"128\" y=\"57.5\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">3</text>\n<text x=\"150\" y=\"83\" font-size=\"8.5\" font-weight=\"700\" fill=\"#2f7a82\" text-anchor=\"middle\">刻蚀机</text>\n<line x1=\"140\" y1=\"97\" x2=\"140\" y2=\"110\" stroke=\"#79bfc6\" stroke-width=\"1.2\" marker-end=\"url(#are)\"/><line x1=\"150\" y1=\"97\" x2=\"150\" y2=\"110\" stroke=\"#79bfc6\" stroke-width=\"1.2\" marker-end=\"url(#are)\"/><line x1=\"160\" y1=\"97\" x2=\"160\" y2=\"110\" stroke=\"#79bfc6\" stroke-width=\"1.2\" marker-end=\"url(#are)\"/>\n<rect x=\"128\" y=\"123\" width=\"44\" height=\"6\" fill=\"#c2cdd9\"/>\n<rect x=\"132\" y=\"115\" width=\"9\" height=\"8\" fill=\"#c2cdd9\"/><rect x=\"146\" y=\"115\" width=\"9\" height=\"8\" fill=\"#c2cdd9\"/><rect x=\"160\" y=\"115\" width=\"9\" height=\"8\" fill=\"#c2cdd9\"/>\n<rect x=\"132\" y=\"111\" width=\"9\" height=\"4\" fill=\"#e3a9cb\"/><rect x=\"146\" y=\"111\" width=\"9\" height=\"4\" fill=\"#e3a9cb\"/><rect x=\"160\" y=\"111\" width=\"9\" height=\"4\" fill=\"#e3a9cb\"/>\n<text x=\"150\" y=\"141\" font-size=\"7.5\" font-weight=\"700\" fill=\"#2f7a82\" text-anchor=\"middle\">刻出沟槽</text>\n<!-- ④ 镀膜机:顶上装靶材 -->\n<rect x=\"192\" y=\"46\" width=\"24\" height=\"8\" rx=\"1\" fill=\"#f3dd9b\" stroke=\"#cba94e\"/>\n<rect x=\"182\" y=\"54\" width=\"44\" height=\"38\" rx=\"3\" fill=\"#eef1f4\" stroke=\"#c5ccd6\"/>\n<rect x=\"189\" y=\"59\" width=\"30\" height=\"7\" rx=\"2\" fill=\"#dde3ea\"/>\n<circle cx=\"182\" cy=\"54\" r=\"7.5\" fill=\"#d6a45a\"/><text x=\"182\" y=\"57.5\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">4</text>\n<text x=\"204\" y=\"83\" font-size=\"8.5\" font-weight=\"700\" fill=\"#b07d3a\" text-anchor=\"middle\">镀膜机</text>\n<circle cx=\"194\" cy=\"98\" r=\"1.6\" fill=\"#cba85e\"/><circle cx=\"202\" cy=\"106\" r=\"1.6\" fill=\"#cba85e\"/><circle cx=\"210\" cy=\"98\" r=\"1.6\" fill=\"#cba85e\"/><circle cx=\"198\" cy=\"112\" r=\"1.6\" fill=\"#cba85e\"/><circle cx=\"214\" cy=\"110\" r=\"1.6\" fill=\"#cba85e\"/><circle cx=\"206\" cy=\"95\" r=\"1.6\" fill=\"#cba85e\"/>\n<rect x=\"182\" y=\"123\" width=\"44\" height=\"6\" fill=\"#c2cdd9\"/>\n<rect x=\"182\" y=\"116\" width=\"44\" height=\"7\" fill=\"#cba85e\"/>\n<text x=\"204\" y=\"141\" font-size=\"7.5\" font-weight=\"700\" fill=\"#b07d3a\" text-anchor=\"middle\">填金属</text>\n<!-- ⑤ 抛光机:磨平 -->\n<rect x=\"236\" y=\"54\" width=\"44\" height=\"38\" rx=\"3\" fill=\"#eef1f4\" stroke=\"#c5ccd6\"/>\n<rect x=\"243\" y=\"59\" width=\"30\" height=\"7\" rx=\"2\" fill=\"#dde3ea\"/>\n<circle cx=\"236\" cy=\"54\" r=\"7.5\" fill=\"#62bd90\"/><text x=\"236\" y=\"57.5\" font-size=\"9\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">5</text>\n<text x=\"258\" y=\"83\" font-size=\"8.5\" font-weight=\"700\" fill=\"#2f7d56\" text-anchor=\"middle\">抛光机</text>\n<rect x=\"240\" y=\"106\" width=\"36\" height=\"6\" rx=\"3\" fill=\"#aab4c2\"/><line x1=\"246\" y1=\"102\" x2=\"252\" y2=\"102\" stroke=\"#9aa1ac\" stroke-width=\"1\"/><line x1=\"264\" y1=\"102\" x2=\"270\" y2=\"102\" stroke=\"#9aa1ac\" stroke-width=\"1\"/>\n<rect x=\"236\" y=\"123\" width=\"44\" height=\"6\" fill=\"#c2cdd9\"/>\n<rect x=\"236\" y=\"119\" width=\"44\" height=\"4\" fill=\"#cba85e\"/><line x1=\"242\" y1=\"120.5\" x2=\"272\" y2=\"120.5\" stroke=\"#f0e3c0\" stroke-width=\"1\"/>\n<text x=\"258\" y=\"141\" font-size=\"7.5\" font-weight=\"700\" fill=\"#2f7d56\" text-anchor=\"middle\">磨平</text>\n<!-- ⑥ 切割封测→芯片 -->\n<line x1=\"286\" y1=\"123\" x2=\"298\" y2=\"118\" stroke=\"#aab4c2\" stroke-width=\"1.3\" marker-end=\"url(#arf)\"/>\n<circle cx=\"300\" cy=\"101\" r=\"7.5\" fill=\"#516079\"/><text x=\"300\" y=\"104.5\" font-size=\"9.5\" font-weight=\"700\" fill=\"#fff\" text-anchor=\"middle\">6</text>\n<rect x=\"304\" y=\"108\" width=\"10\" height=\"10\" rx=\"1\" fill=\"#c2cdd9\" stroke=\"#9fb4d4\"/><rect x=\"317\" y=\"108\" width=\"10\" height=\"10\" rx=\"1\" fill=\"#c2cdd9\" stroke=\"#9fb4d4\"/><rect x=\"310\" y=\"120\" width=\"10\" height=\"9\" rx=\"1\" fill=\"#c2cdd9\" stroke=\"#9fb4d4\"/>\n<text x=\"316\" y=\"141\" font-size=\"7.5\" fill=\"#516079\" text-anchor=\"middle\">芯片</text>\n<!-- 逻辑说明条 -->\n<rect x=\"14\" y=\"150\" width=\"332\" height=\"24\" rx=\"7\" fill=\"#fff7ec\" stroke=\"#f0d9b0\"/>\n<text x=\"180\" y=\"166\" font-size=\"8.5\" font-weight=\"700\" fill=\"#b07d3a\" text-anchor=\"middle\">💡 光刻胶=“保护盖”:盖住的留下、没盖住的被刻掉,图案就这么刻出来</text>\n<!-- 底部文字 -->\n<text x=\"16\" y=\"190\" font-size=\"9\" font-weight=\"700\" fill=\"#8a6d24\">① 硅片〔🟡〕:芯片的“画布”,所有电路都刻在它上面</text>\n<text x=\"16\" y=\"208\" font-size=\"9\" fill=\"#6b4fb0\">② 光刻机:涂满光刻胶 → 透过掩膜板曝光 → 留下“保护盖”图案(粉色)</text>\n<text x=\"16\" y=\"226\" font-size=\"9\" fill=\"#2f7a82\">③ 刻蚀机:没被胶盖住的地方被“吃掉”、凹成沟槽(刻完再洗掉胶)</text>\n<text x=\"16\" y=\"244\" font-size=\"9\" font-weight=\"700\" fill=\"#b07d3a\">④ 镀膜机:往沟槽喷金属做导线——用🟡靶材,打成原子喷上去</text>\n<text x=\"16\" y=\"262\" font-size=\"9\" fill=\"#2f7d56\">⑤ 抛光机(CMP):磨平表面好叠下一层　(↺ ②-⑤重复几十层)</text>\n<text x=\"16\" y=\"280\" font-size=\"9\" fill=\"#516079\">⑥ 切割封测:把硅片切成小芯片、装壳,就是成品芯片</text>\n<text x=\"16\" y=\"300\" font-size=\"9\" font-weight=\"700\" fill=\"#b05757\">🟡 黄色=你持仓做的环(具体哪只看卡片):是“材料”、不是机器;高端被日美垄断</text>\n</svg>", "flow": "把芯片工厂想成一条产线:一片硅片从左边进去,在一台台机器下面被反复加工,最后右边出来变成芯片。你的自选股做的是喂给产线的“材料”,不是机器(具体哪只做哪环,看卡片):\n① 硅片〔🟡你持仓做这环〕:芯片的“画布”——一块圆圆的高纯硅盘子,所有电路都刻在它上面(12英寸大硅片最金贵、最卡脖子)。\n② 光刻机:用光透过一张“掩膜板”(镂空模板),像照相一样把电路图“印”到硅片上,印出一层光刻胶图案。\n③ 刻蚀机:把没被光刻胶盖住的地方“雕”掉,在硅片上留下一道道沟槽。\n④ 镀膜机(PVD):往沟槽里“喷”金属做导线——机器上装着靶材〔🟡你持仓做这环〕,靶材被离子打成一颗颗金属原子、像下雨一样镀到硅片上。\n⑤ CMP 抛光:把表面磨平,好接着叠下一层。—— ②③④⑤ 这几步反复几十上百遍,层层叠出一颗芯片 ——\n⑥ 切割封测:把整片硅片切成一颗颗小芯片、装上外壳、体检合格出厂,就是成品芯片。\n🟡 记住:你的自选股在这条链做的是“材料”(硅片是画布、靶材是金属原料),不是造机器的——别误当设备股。⚠️ 12英寸大硅片、高纯靶材长期被日本(信越/SUMCO)、美日企业垄断,国产替代空间大但最高端仍在追;靶材的国产龙头排全球第二、不是第一。"}};
+const TODAY="预览v25";
+const GLOBAL_PRE={};
+function preBanner(){
+  const el=document.getElementById('prebanner');
+  if(TAB!=='pre'){el.innerHTML='';return;}
+  let html='';
+  if(GLOBAL_PRE&&GLOBAL_PRE.items&&GLOBAL_PRE.items.length){
+    const chips=GLOBAL_PRE.items.map(it=>`<span class="gchip ${it.pct>0?'up':it.pct<0?'down':'flat'}">${it.name} ${it.pct>0?'+':''}${it.pct}%</span>`).join('');
+    html+=`<div class="gbanner"><div class="gh">🌙 隔夜外盘 · ${GLOBAL_PRE.trade_date||''}<span class="gby">盯盘员提供</span></div><div class="gchips">${chips}</div>${GLOBAL_PRE.summary?`<div class="gsum">💡 ${GLOBAL_PRE.summary}</div>`:''}</div>`;
+  }
+  html+=globalEvents();   // 全局事件雷达(B):所有自选股按日期混排
+  // 通用解释只在这里说一次(不再每卡重复)
+  html+=`<div class="prenote">💡 下面每只的"开盘参考"是它的<b>昨收价 + 近20日区间</b>。"跳空"=开盘价和昨收差很多(高开=一开盘就比昨天高、低开=一开盘就低),开盘瞄一眼心里有数即可——<b>买不买你自己定,这里不给建议</b>。个股公告由看板抓、外盘由盯盘员提供,仅供参考、不预测涨跌。</div>`;
+  el.innerHTML=html;
+}
+function repMonths(t){const m=String(t).match(/(\d{4})-(\d{2})/);const td=TODAY.match(/(\d{4})-(\d{2})/);if(!m||!td)return 0;return (+td[1]-+m[1])*12+(+td[2]-+m[2]);}
+function staleTag(t){const mo=repMonths(t);return mo>=6?` <span class="stale">⚠️ ${mo}个月前的研报·数据/预测可能已过时</span>`:'';}
+const grid=document.getElementById('grid'),chips=document.getElementById('chips');
+let filter='all',sort='pct',kw='',TAB='yanjiu';
+const TABHINT={yanjiu:"研究=这只股票的深度档案(公司速览/综合分析/研报精读),慢变、不被每日流水冲掉。",
+ pre:"盘前=每天开盘前看:隔夜外盘对它的影响、今日跳空注意、昨晚突发。",
+ post:"盘后=每天收盘后追加一条带日期动态(最新在上),看变化轨迹。"};
+const has=(s,t)=>(s.badges||[]).some(b=>b[0]===t);
+const hasNews=s=>{const p=(s.post||[])[0];return !!(p&&(p['公告']||p['龙虎']||p['财报']||p['异动']));};
+const cls=p=>p>0?'up':p<0?'down':'flat';
+const sc=v=>v==='高'?'high':v==='中'?'mid':v==='低'?'low':'na';
+function match(s){
+  if(kw){const k=kw.toLowerCase();if(!(s.name.toLowerCase().includes(k)||(s.code||'').includes(k)))return false;}
+  if(filter==='up')return s.pct>0; if(filter==='down')return s.pct<0;
+  if(filter==='news')return hasNews(s); if(filter==='risk')return has(s,'risk'); return true;
+}
+const sorter=(a,b)=> sort==='pct'?b.pct-a.pct : sort==='risk'?((has(b,'risk')-has(a,'risk'))||(a.pct-b.pct)) : 0;
+function daysUntil(d){const t=new Date(d+'T00:00:00'),n=new Date(TODAY.slice(0,10)+'T00:00:00');return Math.round((t-n)/86400000);}
+function evColor(e){if(e.type==='unlock')return e.level==='high'?'#e24b4a':e.level==='mid'?'#e07c16':'#8a929c';return e.type==='report'?'#2f6df0':'#159a57';}
+function evIcon(e){return e.type==='unlock'?'🔓':e.type==='report'?'📄':'💰';}
+function eventTimeline(s){
+  const evs=(s.events||[]);
+  if(!evs.length)return '';   // 没未来事件就不显示这块(绝不放空壳)
+  const items=evs.map(e=>{const dd=daysUntil(e.date);const col=evColor(e);
+    return `<div class="tli"><span class="tldot" style="background:${col}"></span><div class="tld">${e.date} <span class="tlrest">· 还有 ${dd} 天</span></div><div class="tlt">${evIcon(e)} ${e.text}</div></div>`;}).join('');
+  return `<div class="sec"><div class="sh">📅 事件雷达 · 未来要发生的事</div><div class="tl">${items}</div></div>`;
+}
+function globalEvents(){
+  const all=[];
+  STOCKS.forEach(s=>(s.events||[]).forEach(e=>all.push(Object.assign({name:s.name},e))));
+  all.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
+  if(!all.length)return `<div class="gbanner"><div class="gh">📅 近期事件雷达</div><div class="gempty">未来一段时间暂无解禁/财报/分红等日程(数据源里没有就不放,7月起半年报日历与财报季会自动出现)。</div></div>`;
+  const rows=all.slice(0,12).map(e=>`<div class="geo"><span class="gem">${e.date.slice(5)}</span><span class="gedot" style="background:${evColor(e)}"></span><span class="gen">${e.name}</span><span class="get">${evIcon(e)} ${e.text}</span></div>`).join('');
+  return `<div class="gbanner"><div class="gh">📅 近期事件雷达 · 全部自选股(最近在上)</div>${rows}</div>`;
+}
+function prodList(t){
+  // 把"核心产品"长串按 ①②③… 拆成每项一行,并加粗每项的要点(到第一个括号前)
+  if(!t)return '';
+  const re=/[①②③④⑤⑥⑦⑧⑨]/;
+  const boldLead=p=>{const m=p.match(/^([^(（]+)([(（][\s\S]*)?$/);return (m&&m[2])?`<b>${m[1].trim()}</b>${m[2]}`:p;};
+  if(re.test(t)){
+    const first=t.search(re);
+    const intro=t.slice(0,first).replace(/[:：]\s*$/,'').trim();
+    const parts=t.slice(first).split(re).map(x=>x.trim().replace(/[；;。]\s*$/,'')).filter(Boolean);
+    return (intro?`<div class="plintro">${intro}</div>`:'')+parts.map(p=>`<div class="pli">• ${boldLead(p)}</div>`).join('');
+  }
+  return `<div class="pli">${boldLead(t.replace(/。\s*$/,''))}</div>`;
+}
+function card(s){
+  const p=s.profile||{},hot=s.hot||{},syn=s.synth||{},reps=s.reports||[];
+  const sign=s.pct>0?'+':'';
+  const tag=s.mkt?`<span class="tag ${s.mkt}">${s.mktTxt}</span>`:`<span class="tag">${s.mktTxt||''}</span>`;
+  const price=s.price!=null?`现价 ¥${s.price}`:'';
+  // meta
+  const mp=[];
+  if(s.rel!=null){const rel=s.rel>0?`<span class="strong">强 +${s.rel}%</span>`:s.rel<0?`<span class="weak">弱 ${s.rel}%</span>`:'持平';mp.push(`相对大盘 ${rel}`);}
+  mp.push(`换手 <b>${s.turn!=null?s.turn+'%':'—'}</b>`);
+  if(s.ytd!=null)mp.push(`年初至今 <b>${s.ytd>0?'+':''}${s.ytd}%</b>`);
+  const badges=(s.badges||[]).map(b=>`<span class="badge ${b[0]}">${b[0]==='lhb'?'🏆':b[0]==='notice'?'📢':b[0]==='report'?'📄':'⚠️'} ${b[1]}</span>`).join('');
+  // 筛选「有风险/有动静」时,把具体内容前置到卡片顶部,一眼看到
+  let pin='';
+  if(filter==='risk'){
+    const r=(s.badges||[]).find(b=>b[0]==='risk');
+    if(r)pin=`<div class="pin risk">⚠️ 风险:${r[1]}</div>`;
+  }else if(filter==='news'){
+    const pp=(s.post||[])[0]||{};
+    const cats=[['📢公告',pp['公告']],['🏆龙虎',pp['龙虎']],['📈财报',pp['财报']],['⚡异动',pp['异动']]].filter(x=>x[1]).map(x=>x[0]);
+    if(cats.length)pin=`<div class="pin news">📢 今日动静:${cats.join(' · ')}<span class="pinhint">详情见「盘后」</span></div>`;
+  }
+  // 公司速览
+  let prof='';
+  if(p.biz)prof+=`<div class="kv"><b>主营:</b>${p.biz}</div>`;
+  if(p.chain)prof+=`<div class="chain"><b>🔗 产业链位置</b><div class="pre">${p.chain}</div></div>`;
+  if(p.scene&&p.scene_name)prof+=`<div class="boardlink" onclick="openFlow('${p.scene}','${s.code}')">🔗 点开看【${p.scene_name}】完整图(看它在第几环)▶</div>`;
+  if(p.makes)prof+=`<div class="makes">👉 本页这只(<b>${s.name}</b>)做的,就是这条链里的 <b>${p.makes}</b></div>`;
+  if(p.prod)prof+=`<div class="kv"><b>核心产品:</b></div>${prodList(p.prod)}`;
+  if(p.moat)prof+=`<div class="kv"><b>竞争力:</b>${p.moat}</div>`;
+  const pp=[];
+  if(p.posCN)pp.push(`<span class="pill cn">国内:${p.posCN}</span>`);
+  if(p.posGlobal)pp.push(`<span class="pill gl">国外:${p.posGlobal}</span>`);
+  if(p.bench)pp.push(`<span class="pill bench">对标:${p.bench}</span>`);
+  if(pp.length)prof+=`<div class="pos">${pp.join('')}</div>`;
+  if(p.verdict)prof+=`<div class="verdict"><b>🎯 地位研判:</b>${p.verdict}</div>`;
+  if(p.peers&&p.peers.length)prof+=`<div class="peers">🔗 同板块(${p.peer_board||''})的自选股 ${p.peers.length} 只:${p.peers.join('、')}<span class="peerhint">（随清单自动更新）</span></div>`;
+  if(p.terms&&p.terms.length)prof+=`<details class="terms2"><summary>📖 名词小课堂 · ${p.terms.length}个(看不懂的词点开,大白话+例子)</summary>${p.terms.map(t=>`<div class="ti2">· <b>${t[0]}</b> — ${t[1]}</div>`).join('')}</details>`;
+  const profSec=prof?`<div class="sec"><div class="sh">🏢 公司速览</div>${prof}</div>`:'';
+  // 为什么涨
+  let hotSec='';
+  const ev=(hot.events||[]).map(e=>`<span class="ev">${e}</span>`).join('');
+  if(ev||hot.chain){
+    hotSec=`<div class="sec"><div class="sh">🔥 近期关注点 / 异动原因</div><div class="hot">${ev?'<div class="lab">机构关注:</div>'+ev:''}${hot.chain?'<div style="margin-top:5px"><span class="lab">解读:</span>'+hot.chain+'</div>':''}</div></div>`;
+  }
+  // 综合分析(只留一段大白话;原八维标签已删)
+  let synSec='';
+  if(syn.text){
+    synSec=`<div class="sec"><div class="sh">📊 综合分析</div><div class="synth">${syn.text}</div></div>`;
+  }
+  // 研报财报
+  let repSec='';
+  if(reps.length){
+    const hasRecent=reps.some(r=>repMonths(r.t)<6);          // 这只票有没有近6个月的研报
+    const items=reps.map((r,idx)=>{
+      const mo=repMonths(r.t);
+      const hasDeep=(r.bk&&r.bk.length);                     // 有没有读到正文分点
+      if(mo>=6){                                             // 超6个月:默认不放;除非该股没有近6月研报,则留最新这一篇(折叠+过时标)
+        if(hasRecent||idx!==0) return '';
+        const gist=hasDeep?`📌 总:${r.concl}`:`《${r.concl}》<span class="note">— 未读到正文</span>`;
+        return `<div class="rep"><div class="rt">${r.t}${staleTag(r.t)}</div><div class="concl">${gist}</div><a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+      }
+      if(!hasDeep){                                          // 近6月但没读到正文:只给标题+链接
+        return `<div class="rep"><div class="rt">${r.t}</div><div class="concl">《${r.concl}》<span class="note">— 未读到正文</span></div><a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+      }
+      const bks=(r.bk||[]).map(b=>`<div class="bki">· <b>${b[0]}</b>:${b[1]}</div>`).join('');
+      const more=`<details class="more"><summary>精读脉络(结论+证据)</summary>${bks}</details>`;
+      return `<div class="rep"><div class="rt">${r.t}</div><div class="concl">📌 总:${r.concl}</div>${more}<a href="${r.url}" target="_blank" rel="noreferrer noopener">🔗 看原文PDF</a></div>`;
+    }).filter(x=>x).join('');
+    // 去重名词框(只统计仍显示的<=2年研报)
+    const seen={},allTerms=[];
+    reps.forEach(r=>{if(repMonths(r.t)<=24)(r.tm||[]).forEach(t=>{if(t&&t[0]&&!seen[t[0]]){seen[t[0]]=1;allTerms.push(t);}});});
+    const glossary=(items&&allTerms.length)?`<details class="more glossary"><summary>📖 本页名词解释（${allTerms.length} 个）</summary>${allTerms.map(t=>`<div class="ti"><b>${t[0]}</b> ${t[1]} <span class="tsrc">${t[2]||''}</span></div>`).join('')}</details>`:'';
+    repSec=`<div class="sec"><div class="sh">📄 研报精读(总:结论 / 分:脉络证据)</div>${items||'<div class="empty2">近2年无新研报</div>'}${glossary}</div>`;
+  }
+  const picSec=s.pic?`<div class="pic">💡 ${s.pic}</div>`:'';
+  // 公告精读(研究·仓库新板块):结构先就位,正文总分第二步接入;暂无则隐藏
+  let notSec='';
+  if(s.notices&&s.notices.length){
+    let subst=s.notices.filter(n=>(n.bk||[]).length);       // 实质性:有分点(业务/合同/增减持/风险等)
+    const proc=s.notices.filter(n=>!(n.bk||[]).length);     // 程序性:换届/决议/聘任等,没分点
+    subst.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));  // 新→旧
+    const dropped=subst.length-3;                           // 只留最新3条实质公告,旧的按时间淘汰
+    subst=subst.slice(0,3);
+    const cap=dropped>0?`<div class="note" style="margin:2px 0 6px">只显示最新 3 条实质公告,更早的 ${dropped} 条已按时间淘汰(避免越堆越多)。</div>`:'';
+    const substHTML=subst.map(n=>`<div class="rep" style="border-left-color:#7bb0f5;background:#fafcff"><div class="rt">${n.t}</div><div class="concl">📌 总:${n.concl}</div>${(n.bk||[]).map(b=>`<div class="bki">· <b>${b[0]}</b>:${b[1]}</div>`).join('')}<a href="${n.url||'#'}" target="_blank" rel="noreferrer noopener">🔗 看原文</a></div>`).join('');
+    const procHTML=proc.length?`<div class="rep proc"><div class="rt">📋 常规通知 · ${proc.length}条<span class="note">(换届/决议/聘任等事务性)</span></div>${proc.map(n=>`<div class="pli">• <a href="${n.url||'#'}" target="_blank" rel="noreferrer noopener">《${n.t}》</a>${n.concl?'<span class="note"> — '+n.concl+'</span>':''}</div>`).join('')}</div>`:'';
+    if(substHTML||procHTML)notSec=`<div class="sec"><div class="sh">📋 公告精读</div>${cap}${substHTML}${procHTML}</div>`;
+  }
+  const eventSec=eventTimeline(s);
+  const yanjiu=`${profSec}${eventSec}${hotSec}${repSec}${notSec}${picSec}${synSec}`;   // 研究=仓库:速览/事件雷达/综合/研报精读/公告精读
+  const body=TAB==='pre'?preHTML(s):TAB==='post'?postHTML(s):yanjiu;
+  return `<div class="card ${cls(s.pct)}"><div class="strip"></div><div class="body">
+    <div class="row1"><div><span class="name">${s.name}</span>${tag}<span class="code">${s.code||''}</span><br><button class="zoom" onclick="openZoom('${s.code}')">🔍 放大阅读</button></div>
+      <div class="pct">${sign}${s.pct}%<small>${price}</small></div></div>
+    ${pin}
+    <div class="meta">${mp.map(x=>'<span>'+x+'</span>').join('')}</div>
+    ${badges?`<div class="badges">${badges}</div>`:''}
+    ${body}</div></div>`;
+}
+function preHTML(s){
+  const p=s.pre;
+  if(!p)return `<div class="empty2">🌅 盘前暂无记录(每个交易日开盘前自动生成)</div>`;
+  let h='';
+  if(p.influence)h+=`<div class="pblk core"><span class="lab">🌙 外盘对它的影响:</span>${p.influence}</div>`;
+  if(p.event)h+=`<div class="pblk"><span class="lab">📅 临近事件:</span>${p.event}</div>`;
+  if(p.yesterday)h+=`<div class="pblk"><span class="lab">📊 昨日小结:</span>${p.yesterday}</div>`;
+  if(p.open)h+=`<div class="pblk"><span class="lab">⚡ 开盘参考:</span>${p.open}</div>`;
+  return `<div class="sec">${h||'<div class="empty2">盘前暂无</div>'}</div>`;
+}
+function postHTML(s){
+  const arr=s.post;
+  if(!arr||!arr.length)return `<div class="empty2">🌆 盘后暂无记录<br>每个交易日收盘后在这里追加一条带日期动态(最新在上):今日异动小结 + 新公告/龙虎榜/财报。</div>`;
+  const ents=arr.map((e,i)=>`<div class="ent ${i===0?'today':''}"><div class="date">📆 ${e.date}${i===0?'<span class="new">最新</span>':''}</div>`+
+    [['⚡ 异动',e['异动']],['📢 公告',e['公告']],['🏆 龙虎榜',e['龙虎']],['📈 财报',e['财报']]].filter(x=>x[1]).map(x=>`<div class="li"><span class="k">${x[0]}</span>${x[1]}</div>`).join('')+`</div>`).join('');
+  return `<div class="sh">🌆 盘后时间线(最新在上,每天追加)</div><div class="tl">${ents}</div>`;
+}
+function colorPct(s){return String(s).replace(/([+＋][\d.]+\s*%)/g,'<span class="up">$1</span>').replace(/(-[\d.]+\s*%)/g,'<span class="dn">$1</span>');}
+function openZoom(code){const s=STOCKS.find(x=>x.code===code);if(!s)return;
+  const prev=TAB;TAB='yanjiu';                 // 放大=这只票的完整页:研究 + 盘前 + 盘后,一次看全
+  let html=card(s);
+  html+=`<div class="card"><div class="body"><div class="sh" style="margin-top:0">🌅 盘前</div>${preHTML(s)}</div></div>`;
+  html+=`<div class="card"><div class="body">${postHTML(s)}</div></div>`;
+  TAB=prev;
+  const w=document.getElementById('zoomwrap');w.innerHTML=html;
+  w.querySelectorAll('details').forEach(d=>d.open=true);
+  document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}
+function closeZoom(){document.getElementById('modal').style.display='none';document.body.style.overflow='';}
+function openFlow(key,code){const b=BOARDS[key];if(!b)return;
+  const s=code?STOCKS.find(x=>x.code===code):null;const pr=(s&&s.profile)||{};
+  let same='';
+  if(pr.role){
+    const peers=STOCKS.filter(x=>x.code!==code&&((x.profile||{}).role===pr.role)).map(x=>x.name);
+    same=peers.length?`跟【${s.name}】做相同的(都在「${pr.role}」这一环)还有:${peers.join('、')}`
+                      :`你的关注列表里,目前就【${s.name}】一只做「${pr.role}」这一环。`;
+  }
+  const w=document.getElementById('zoomwrap');
+  w.innerHTML=`<div class="card"><div class="body"><div class="sh" style="margin-top:0">📦 ${b.name}</div>`+
+    `<div class="vdiag">${b.svg}</div>`+
+    (s&&pr.makes?`<div class="makes big">👉 这只【${s.name}】做的,就是图里的 <b>${pr.makes}</b></div>`:'')+
+    `<div class="flow big"><b>⚙️ 这条链怎么运作(①-⑧ 大白话)</b><div class="pre">${b.flow}</div></div>`+
+    (same?`<div class="who big"><b>🏭 跟这只做相同的股票</b><div class="pre">${same}</div></div>`:'')+
+    `</div></div>`;
+  document.getElementById('modal').style.display='block';document.body.style.overflow='hidden';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeZoom();});
+function render(){const list=STOCKS.filter(match).sort(sorter);
+  document.getElementById('cnt').textContent=list.length;
+  preBanner();
+  grid.innerHTML=list.length?list.map(card).join(''):'<div class="empty">没有符合条件的股票</div>';}
+chips.addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;
+  chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');filter=c.dataset.f;render();});
+document.getElementById('q').addEventListener('input',e=>{kw=e.target.value.trim();render();});
+document.getElementById('sort').addEventListener('change',e=>{sort=e.target.value;render();});
+document.getElementById('tabs').addEventListener('click',e=>{const t=e.target.closest('.tab');if(!t)return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');TAB=t.dataset.t;
+  document.getElementById('tabhint').textContent=TABHINT[TAB];render();});
+render();
+</script></body></html>
